@@ -10,7 +10,9 @@ can access each other and collaborate.
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import flag
 
-from .renderers import AutoFunctionRenderer, AutoClassRenderer, AutoAttributeRenderer
+from sphinx.domains.javascript import JSCallable
+
+from .renderers import AutoFunctionRenderer, AutoClassRenderer, AutoNamespaceRenderer, AutoAttributeRenderer
 
 
 class JsDirective(Directive):
@@ -61,6 +63,27 @@ def auto_class_directive_bound_to_app(app):
 
     return AutoClassDirective
 
+def auto_namespace_directive_bound_to_app(app):
+    class AutoNamespaceDirective(JsDirective):
+        """js:autonamespace directive, which spits out a js:namespace directive
+
+        Takes a single argument which is a JS class name combined with an
+        optional formal parameter list for the constructor, all mashed together
+        in a single string.
+
+        """
+        option_spec = JsDirective.option_spec.copy()
+        option_spec.update({
+            'members': lambda members: ([m.strip() for m in members.split(',')]
+                                        if members else []),
+            'exclude-members': _members_to_exclude,
+            'private-members': flag})
+
+        def run(self):
+            return AutoNamespaceRenderer.from_directive(self, app).rst_nodes()
+
+    return AutoNamespaceDirective
+
 
 def auto_attribute_directive_bound_to_app(app):
     class AutoAttributeDirective(JsDirective):
@@ -83,3 +106,9 @@ def _members_to_exclude(arg):
 
     """
     return set(a.strip() for a in (arg or '').split(','))
+
+
+class JSCustomConstructor(JSCallable):
+    """Like a callable but with a different prefix."""
+    display_prefix = 'namespace '
+    allow_nesting = True

@@ -3,8 +3,10 @@ from os.path import join, normpath
 from sphinx.errors import SphinxError
 
 from .directives import (auto_class_directive_bound_to_app,
+                         auto_namespace_directive_bound_to_app,
                          auto_function_directive_bound_to_app,
-                         auto_attribute_directive_bound_to_app)
+                         auto_attribute_directive_bound_to_app,
+                         JSCustomConstructor)
 from .jsdoc import Analyzer as JsAnalyzer
 from .typedoc import Analyzer as TsAnalyzer
 
@@ -23,6 +25,12 @@ def setup(app):
     app.add_directive_to_domain('js',
                                 'autoclass',
                                 auto_class_directive_bound_to_app(app))
+    app.add_directive_to_domain('js',
+                                'autonamespace',
+                                auto_namespace_directive_bound_to_app(app))
+    app.add_directive_to_domain('js',
+                                'namespace',
+                                JSCustomConstructor)
     app.add_directive_to_domain('js',
                                 'autoattribute',
                                 auto_attribute_directive_bound_to_app(app))

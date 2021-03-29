@@ -240,3 +240,11 @@ class Namespace(TopLevel):
     # itself. These are supported and extracted by jsdoc, but they end up in an
     # `undocumented: True` doclet and so are presently filtered out. But we do
     # have the space to include them someday.
+
+@dataclass
+class Module(TopLevel):
+    authors: List[str]
+    version: str
+    license_information: str
+    # functions: Optional[List[Function]]
+    members: Optional[List[Union[Class, Function, Namespace]]]

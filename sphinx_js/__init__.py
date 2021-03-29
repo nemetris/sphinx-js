@@ -6,6 +6,7 @@ from .directives import (auto_class_directive_bound_to_app,
                          auto_namespace_directive_bound_to_app,
                          auto_function_directive_bound_to_app,
                          auto_attribute_directive_bound_to_app,
+                         auto_module_directive_bound_to_app,
                          JSCustomConstructor)
 from .jsdoc import Analyzer as JsAnalyzer
 from .typedoc import Analyzer as TsAnalyzer
@@ -34,11 +35,14 @@ def setup(app):
     app.add_directive_to_domain('js',
                                 'autoattribute',
                                 auto_attribute_directive_bound_to_app(app))
-    # TODO: We could add a js:module with app.add_directive_to_domain().
+    app.add_directive_to_domain('js',
+                                'automodule',
+                                auto_module_directive_bound_to_app(app))
 
     app.add_config_value('js_language', 'javascript', 'env')
     app.add_config_value('js_source_path', '../', 'env')
     app.add_config_value('jsdoc_config_path', None, 'env')
+    app.add_config_value('jsdoc_cache', None, 'env')
 
     # We could use a callable as the "default" param here, but then we would
     # have had to duplicate or build framework around the logic that promotes

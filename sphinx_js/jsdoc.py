@@ -15,7 +15,7 @@ from tempfile import TemporaryFile
 from sphinx.errors import SphinxError
 
 from .analyzer_utils import cache_to_file, Command, is_explicitly_rooted
-from .ir import Attribute, Class, Exc, Function, Namespace, NO_DEFAULT, Param, Pathname, Return
+from .ir import Attribute, Class, Exc, Function, Module, Namespace, NO_DEFAULT, Param, Pathname, Return
 from .parsers import path_and_formal_params, PathVisitor
 from .suffix_tree import SuffixTree
 
@@ -61,14 +61,22 @@ class Analyzer:
         # are documented, you shouldn't have trouble.
         self._doclets_by_class = defaultdict(lambda: [])
         self._doclets_by_namespace = defaultdict(lambda: [])
+        self._doclets_by_module = defaultdict(lambda: [])
         for d in doclets:
             of = d.get('memberof')
-            if of:  # speed optimization
+
+            # TODO filter to get better performance
+            if of:
                 segments = full_path_segments(d, base_dir, longname_field='memberof')
-                kind = d.get('kind')
                 # append members to class and namespace
                 self._doclets_by_class[tuple(segments)].append(d)
                 self._doclets_by_namespace[tuple(segments)].append(d)
+                self._doclets_by_module[tuple(segments)].append(d)
+            else:
+                segments = full_path_segments(d, base_dir, longname_field='longname')
+                self._doclets_by_module[tuple(segments)].append(d)
+
+
 
     @classmethod
     def from_disk(cls, abs_source_paths, app, base_dir):
@@ -99,12 +107,43 @@ class Analyzer:
                 'function': self._doclet_as_function,
                 'class': self._doclet_as_class,
                 'namespace': self._doclet_as_namespace,
-                'attribute': self._doclet_as_attribute}[as_type]
+                'attribute': self._doclet_as_attribute,
+                'module': self._doclet_as_module}[as_type]
         except KeyError:
             raise NotImplementedError('Unknown autodoc directive: auto%s' % as_type)
 
-        doclet, full_path = self._doclets_by_path.get_with_path(path_suffix)
+        doclet, full_path = self._doclets_by_path.get_with_path(path_suffix, as_type)
         return doclet_as_whatever(doclet, full_path)
+
+    def _doclet_as_module(self, doclet, full_path):
+        # Add prefix 'module:' so users can use the automodule directive without that prefix.
+        prefix = 'module'
+        full_path[-1] = '{}:{}'.format(prefix, full_path[-1])
+        members = []
+        for member_doclet in self._doclets_by_module[tuple(full_path)]:
+            kind = member_doclet.get('kind')
+            member_full_path = full_path_segments(member_doclet, self._base_dir)
+            # Typedefs should still fit into function-shaped holes:
+            if (kind == 'class'):
+                doclet_as_whatever = self._doclet_as_class
+            elif (kind == 'namespace'):
+                doclet_as_whatever = self._doclet_as_namespace
+            elif (kind == 'function'):
+                doclet_as_whatever = self._doclet_as_function
+            else:
+                continue # ignore everything else at module level
+            member = doclet_as_whatever(member_doclet, member_full_path)
+            members.append(member)
+        return Module(
+            authors=doclet.get('author'),   # can be a list of authors
+            version=doclet.get('version'),
+            license_information=doclet.get('license'),
+            # date=doclet.get('tags', []).get('value'), FIXME print date information
+            description=doclet.get('description'),
+            members=members,
+            exported_from=None,
+            **top_level_properties(doclet, full_path)
+        )
 
     def _doclet_as_class(self, doclet, full_path):
         # This is an instance method so it can get at the base dir.

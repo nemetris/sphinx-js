@@ -112,13 +112,10 @@ class Analyzer:
         except KeyError:
             raise NotImplementedError('Unknown autodoc directive: auto%s' % as_type)
 
-        doclet, full_path = self._doclets_by_path.get_with_path(path_suffix, as_type)
+        doclet, full_path = self._doclets_by_path.get_with_path(path_suffix)
         return doclet_as_whatever(doclet, full_path)
 
     def _doclet_as_module(self, doclet, full_path):
-        # Add prefix 'module:' so users can use the automodule directive without that prefix.
-        prefix = 'module'
-        full_path[-1] = '{}:{}'.format(prefix, full_path[-1])
         members = []
         for member_doclet in self._doclets_by_module[tuple(full_path)]:
             kind = member_doclet.get('kind')

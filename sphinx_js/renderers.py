@@ -165,6 +165,15 @@ class JsRenderer(object):
                     yield [rst.escape(h) for h in heads], unwrapped(tail)
 
 
+    def _default_options(self):
+        default_options = self._app.config['js_autodoc_default_options']
+        for option, value in default_options.items():
+            if isinstance(value, bool):
+                self._options.setdefault(option, '')
+            else:
+                self._options[option] = value
+
+
 class AutoFunctionRenderer(JsRenderer):
     _template = 'function.rst'
     _renderer_type = 'function'
@@ -185,6 +194,10 @@ class AutoFunctionRenderer(JsRenderer):
 class AutoClassRenderer(JsRenderer):
     _template = 'class.rst'
     _renderer_type = 'class'
+
+    def __init__(self, directive, app, arguments=None, content=None, options=None):
+        super().__init__(directive, app, arguments=arguments, content=content, options=options)
+        self._default_options()
 
     def _template_vars(self, name, obj):
         # TODO: At the moment, we pull most fields (params, returns,
@@ -263,6 +276,10 @@ class AutoClassRenderer(JsRenderer):
 class AutoNamespaceRenderer(JsRenderer):
     _template = 'namespace.rst'
     _renderer_type = 'namespace'
+
+    def __init__(self, directive, app, arguments=None, content=None, options=None):
+        super().__init__(directive, app, arguments=arguments, content=content, options=options)
+        self._default_options()
 
     def _template_vars(self, name, obj):
         # TODO: At the moment, we pull most fields (params, returns,
@@ -350,6 +367,10 @@ class AutoAttributeRenderer(JsRenderer):
 class AutoModuleRenderer(JsRenderer):
     _template = 'module.rst'
     _renderer_type = 'module'
+
+    def __init__(self, directive, app, arguments=None, content=None, options=None):
+        super().__init__(directive, app, arguments=arguments, content=content, options=options)
+        self._default_options()
 
     def _template_vars(self, name, obj):
         return dict(

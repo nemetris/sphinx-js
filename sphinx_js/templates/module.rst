@@ -6,7 +6,7 @@
 .. js:module:: {{ name }}
 
 {% if description -%}
-    **Description:** {{ description }}
+    {{ description }}
 {%- endif %}
 
 {% if authors -%}

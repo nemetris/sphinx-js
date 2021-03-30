@@ -49,7 +49,7 @@ class SuffixTree(object):
         if conflicts:
             raise PathsTaken(conflicts)
 
-    def get_with_path(self, segments, as_type=None):
+    def get_with_path(self, segments):
         """Return the value stored at a path ending in the given segments,
         along with the full path found.
 
@@ -64,11 +64,10 @@ class SuffixTree(object):
         """
         # Keep walking down subtrees (returning NotFound if failed) until we
         # run out of segs:
+        tree = self._tree
         for seg in reversed(segments):
-            if as_type == 'module':
-                seg = 'module:' + seg
             try:
-                tree = self._tree['subtree'][seg]
+                tree = tree['subtree'][seg]
             except KeyError:
                 raise SuffixNotFound(segments)
 

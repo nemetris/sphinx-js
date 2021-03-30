@@ -39,6 +39,12 @@ class JsRenderer(object):
         self._content = content or StringList()
         self._options = options or {}
 
+        # Prefix partial path if we use automodule directive.
+        # Only add prefix if we must not deal with long pathnames like ./some/dir/file..
+        if len(self._partial_path) == 1 and 'automodule' in directive.name:
+            prefix = 'module'
+            self._partial_path[0] = '{}:{}'.format(prefix, self._partial_path[0])
+
     @classmethod
     def from_directive(cls, directive, app):
         """Return one of these whose state is all derived from a directive.

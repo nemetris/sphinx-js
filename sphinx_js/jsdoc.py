@@ -15,7 +15,7 @@ from tempfile import TemporaryFile
 from sphinx.errors import SphinxError
 
 from .analyzer_utils import cache_to_file, Command, is_explicitly_rooted
-from .ir import Attribute, Class, Exc, Function, Module, Namespace, NO_DEFAULT, Param, Pathname, Return
+from .ir import Attribute, Class, Exc, Function, Module, Modules, Namespace, NO_DEFAULT, Param, Pathname, Return
 from .parsers import path_and_formal_params, PathVisitor
 from .suffix_tree import SuffixTree
 
@@ -62,21 +62,21 @@ class Analyzer:
         self._doclets_by_class = defaultdict(lambda: [])
         self._doclets_by_namespace = defaultdict(lambda: [])
         self._doclets_by_module = defaultdict(lambda: [])
+        self._doclets_by_location = defaultdict(lambda: [])
         for d in doclets:
             of = d.get('memberof')
-
-            # TODO filter to get better performance
-            if of:
-                segments = full_path_segments(d, base_dir, longname_field='memberof')
-                # append members to class and namespace
-                self._doclets_by_class[tuple(segments)].append(d)
-                self._doclets_by_namespace[tuple(segments)].append(d)
-                self._doclets_by_module[tuple(segments)].append(d)
+            if not of:
+                folder_segments = folder_path_segments(d, base_dir)
+                path_segments = full_path_segments(d, base_dir, longname_field='longname')
+                self._doclets_by_module[tuple(path_segments)].append(d)
+                self._doclets_by_location[frozenset(folder_segments)].append(d)
             else:
-                segments = full_path_segments(d, base_dir, longname_field='longname')
-                self._doclets_by_module[tuple(segments)].append(d)
-
-
+                folder_segments = folder_path_segments(d, base_dir)
+                path_segments = full_path_segments(d, base_dir, longname_field='memberof')
+                self._doclets_by_class[tuple(path_segments)].append(d)
+                self._doclets_by_namespace[tuple(path_segments)].append(d)
+                self._doclets_by_module[tuple(path_segments)].append(d)
+                self._doclets_by_location[frozenset(folder_segments)].append(d)
 
     @classmethod
     def from_disk(cls, abs_source_paths, app, base_dir):
@@ -108,12 +108,46 @@ class Analyzer:
                 'class': self._doclet_as_class,
                 'namespace': self._doclet_as_namespace,
                 'attribute': self._doclet_as_attribute,
-                'module': self._doclet_as_module}[as_type]
+                'module': self._doclet_as_module,
+                'modules': self._doclets_as_modules}[as_type]
         except KeyError:
             raise NotImplementedError('Unknown autodoc directive: auto%s' % as_type)
 
-        doclet, full_path = self._doclets_by_path.get_with_path(path_suffix)
-        return doclet_as_whatever(doclet, full_path)
+        if as_type == 'modules':
+            return doclet_as_whatever(path_suffix)
+        else:
+            doclet, full_path = self._doclets_by_path.get_with_path(path_suffix)
+            return doclet_as_whatever(doclet, full_path)
+
+    def _doclets_as_modules(self, partial_path):
+        members = []
+        # TODO this kind of "lazy path resolvinng" is not the best
+        locations = [l for l in self._doclets_by_location.keys() if set(partial_path).intersection(l)]
+        if len(locations) > 1:
+            raise Exception("Ambiguous path: {} can not be resolved!")  # TODO
+        for member_doclet in self._doclets_by_location[locations[0]]:
+            kind = member_doclet.get('kind')
+            member_full_path = full_path_segments(member_doclet, self._base_dir)
+            # Typedefs should still fit into function-shaped holes:
+            if (kind == 'module'):
+                doclet_as_whatever = self._doclet_as_module
+            else:
+                continue # ignore everything else at module level
+            member = doclet_as_whatever(member_doclet, member_full_path)
+            members.append(member)
+        # TODO to much unneccessary attributes...
+        return Modules(
+            members=members,
+            name=Pathname(partial_path).dotted(),
+            path=Pathname(partial_path),
+            filename=Pathname(partial_path).dotted(),
+            description='A bunch of modules',
+            line='',
+            deprecated=False,
+            examples=[],
+            see_alsos=[],
+            properties=[],
+            exported_from=False)
 
     def _doclet_as_module(self, doclet, full_path):
         members = []
@@ -139,8 +173,7 @@ class Analyzer:
             description=doclet.get('description'),
             members=members,
             exported_from=None,
-            **top_level_properties(doclet, full_path)
-        )
+            **top_level_properties(doclet, full_path))
 
     def _doclet_as_class(self, doclet, full_path):
         # This is an instance method so it can get at the base dir.
@@ -237,6 +270,16 @@ def full_path_segments(d, base_dir, longname_field='longname'):
     path = '%s/%s.%s' % (rooted_rel,
                          splitext(meta['filename'])[0],
                          d[longname_field])
+    return PathVisitor().visit(
+        path_and_formal_params['path'].parse(path))
+
+
+def folder_path_segments(d, base_dir):
+    meta = d['meta']
+    rel = relpath(meta['path'], base_dir)
+    rel = '/'.join(rel.split(sep))
+    rooted_rel = rel if is_explicitly_rooted(rel) else './%s' % rel
+    path = rooted_rel
     return PathVisitor().visit(
         path_and_formal_params['path'].parse(path))
 

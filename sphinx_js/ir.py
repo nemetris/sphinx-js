@@ -248,3 +248,7 @@ class Module(TopLevel):
     license_information: str
     # functions: Optional[List[Function]]
     members: Optional[List[Union[Class, Function, Namespace]]]
+
+@dataclass
+class Modules(TopLevel):
+    members: List[Module]

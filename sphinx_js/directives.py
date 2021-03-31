@@ -11,6 +11,9 @@ from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import flag
 
 from sphinx.domains.javascript import JSCallable
+from sphinx.locale import __
+from sphinx.util import logging
+from sphinx.util.console import bold
 
 from .renderers import (AutoFunctionRenderer,
                         AutoClassRenderer,
@@ -18,6 +21,9 @@ from .renderers import (AutoFunctionRenderer,
                         AutoAttributeRenderer,
                         AutoModuleRenderer,
                         AutoModulesRenderer)
+
+logger = logging.getLogger(__name__)
+prefix = bold(__('Sphinx-js [Directive]: '))
 
 
 class JsDirective(Directive):
@@ -31,6 +37,16 @@ class JsDirective(Directive):
     option_spec = {
         'short-name': flag
     }
+
+    def __init__(self, name, arguments, options, content, lineno,
+                 content_offset, block_text, state, state_machine):
+        super().__init__(name, arguments, options, content, lineno,
+                 content_offset, block_text, state, state_machine)
+        message = "found {name}:: {arguments}".format(
+            name=name,
+            arguments=' '.join(arguments)
+        )
+        logger.info(prefix + message)
 
 
 def auto_function_directive_bound_to_app(app):

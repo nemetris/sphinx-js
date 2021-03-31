@@ -5,12 +5,17 @@ from docutils.statemachine import StringList
 from docutils.utils import new_document
 from jinja2 import Environment, PackageLoader
 from sphinx.errors import SphinxError
-from sphinx.util import rst
+from sphinx.locale import __
+from sphinx.util import logging, rst
+from sphinx.util.console import bold
 
 from .analyzer_utils import dotted_path
 from .ir import Class, Function, Interface, Module, Namespace, Pathname
 from .parsers import PathVisitor
 from .suffix_tree import SuffixAmbiguous, SuffixNotFound
+
+logger = logging.getLogger(__name__)
+prefix = bold(__('Sphinx-js [Renderers]: '))
 
 
 class JsRenderer(object):
@@ -35,6 +40,7 @@ class JsRenderer(object):
         # on the instance so calls to template_vars don't need to concern
         # themselves with what it needs.
         self._app = app
+        self._env = app.env
         self._partial_path, self._explicit_formal_params = PathVisitor().parse(arguments[0])
         self._content = content or StringList()
         self._options = options or {}
@@ -89,10 +95,13 @@ class JsRenderer(object):
             #
             # Not sure if passing the settings from the "real" doc is the right
             # thing to do here:
-            doc = new_document('%s:%s(%s)' % (obj.filename,
-                                              obj.path,
-                                              obj.line),
+            doc_name = self._env.docname
+            directive_name = self._directive.name
+            line = self._directive.content_offset
+            doc = new_document('%s:%s::%s(%s)' % (doc_name, directive_name, obj.name, line),
                                settings=self._directive.state.document.settings)
+
+            logger.info(prefix + "parse RST")
             RstParser().parse(rst, doc)
             return doc.children
         return []
@@ -105,6 +114,8 @@ class JsRenderer(object):
         # Render to RST using Jinja:
         env = Environment(loader=PackageLoader('sphinx_js', 'templates'))
         template = env.get_template(self._template)
+        message = "render jinja template {}".format(template)
+        logger.debug(prefix + message)
         return template.render(**self._template_vars(dotted_name, obj))
 
     def _formal_params(self, obj):
@@ -447,6 +458,7 @@ class AutoModulesRenderer(JsRenderer):
             all.
         :arg exclude: Set of names of members to exclude
         """
+        # TODO refactor this
         def rst_for(obj):
             if isinstance(obj, Module):
                 renderer = AutoModuleRenderer

@@ -8,7 +8,7 @@ from sphinx.errors import SphinxError
 from sphinx.util import rst
 
 from .analyzer_utils import dotted_path
-from .ir import Class, Function, Interface, Namespace, Pathname
+from .ir import Class, Function, Interface, Module, Namespace, Pathname
 from .parsers import PathVisitor
 from .suffix_tree import SuffixAmbiguous, SuffixNotFound
 
@@ -405,6 +405,52 @@ class AutoModuleRenderer(JsRenderer):
         """
         def rst_for(obj):
             if isinstance(obj, Namespace):
+                renderer = AutoNamespaceRenderer
+            elif isinstance(obj, Class):
+                renderer = AutoClassRenderer
+            else:
+                renderer = AutoFunctionRenderer
+            return renderer(self._directive,
+                            self._app,
+                            arguments=['dummy'],
+                            options=self._options).rst(
+                [obj.name],
+                obj,
+                use_short_name=False)
+
+        return '\n\n'.join(
+            rst_for(member) for member in _members_to_include(obj, include)
+            if member.name not in exclude)
+
+
+class AutoModulesRenderer(JsRenderer):
+    _template = 'modules.rst'
+    _renderer_type = 'modules'
+
+    def __init__(self, directive, app, arguments=None, content=None, options=None):
+        super().__init__(directive, app, arguments=arguments, content=content, options=options)
+        self._default_options()
+
+    def _template_vars(self, name, obj):
+        return dict(
+            members=self._members_of(obj,
+                                     include=self._options['members'],
+                                     exclude=self._options.get('exclude-members', set()))
+                        if 'members' in self._options else '',
+        )
+
+    def _members_of(self, obj, include, exclude):
+        """Return RST describing the members of a given module.
+
+        :arg obj Module: The module we're documenting
+        :arg include: List of names of members to include. If empty, include
+            all.
+        :arg exclude: Set of names of members to exclude
+        """
+        def rst_for(obj):
+            if isinstance(obj, Module):
+                renderer = AutoModuleRenderer
+            elif isinstance(obj, Namespace):
                 renderer = AutoNamespaceRenderer
             elif isinstance(obj, Class):
                 renderer = AutoClassRenderer

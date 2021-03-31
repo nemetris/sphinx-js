@@ -69,14 +69,14 @@ class Analyzer:
                 folder_segments = folder_path_segments(d, base_dir)
                 path_segments = full_path_segments(d, base_dir, longname_field='longname')
                 self._doclets_by_module[tuple(path_segments)].append(d)
-                self._doclets_by_location[frozenset(folder_segments)].append(d)
+                self._doclets_by_location[tuple(folder_segments)].append(d)
             else:
                 folder_segments = folder_path_segments(d, base_dir)
                 path_segments = full_path_segments(d, base_dir, longname_field='memberof')
                 self._doclets_by_class[tuple(path_segments)].append(d)
                 self._doclets_by_namespace[tuple(path_segments)].append(d)
                 self._doclets_by_module[tuple(path_segments)].append(d)
-                self._doclets_by_location[frozenset(folder_segments)].append(d)
+                self._doclets_by_location[tuple(folder_segments)].append(d)
 
     @classmethod
     def from_disk(cls, abs_source_paths, app, base_dir):
@@ -121,11 +121,8 @@ class Analyzer:
 
     def _doclets_as_modules(self, partial_path):
         members = []
-        # TODO this kind of "lazy path resolvinng" is not the best
-        locations = [l for l in self._doclets_by_location.keys() if set(partial_path).intersection(l)]
-        if len(locations) > 1:
-            raise Exception("Ambiguous path: {} can not be resolved!")  # TODO
-        for member_doclet in self._doclets_by_location[locations[0]]:
+        path = resolve_path(partial_path, self._doclets_by_location.keys())
+        for member_doclet in self._doclets_by_location[path]:
             kind = member_doclet.get('kind')
             member_full_path = full_path_segments(member_doclet, self._base_dir)
             # Typedefs should still fit into function-shaped holes:
@@ -135,19 +132,10 @@ class Analyzer:
                 continue # ignore everything else at module level
             member = doclet_as_whatever(member_doclet, member_full_path)
             members.append(member)
-        # TODO to much unneccessary attributes...
         return Modules(
             members=members,
             name=Pathname(partial_path).dotted(),
-            path=Pathname(partial_path),
-            filename=Pathname(partial_path).dotted(),
-            description='A bunch of modules',
-            line='',
-            deprecated=False,
-            examples=[],
-            see_alsos=[],
-            properties=[],
-            exported_from=False)
+            path=Pathname(partial_path))
 
     def _doclet_as_module(self, doclet, full_path):
         members = []
@@ -173,7 +161,7 @@ class Analyzer:
             description=doclet.get('description'),
             members=members,
             exported_from=None,
-            **top_level_properties(doclet, full_path))
+            **root_top_level_properties(doclet, full_path))
 
     def _doclet_as_class(self, doclet, full_path):
         # This is an instance method so it can get at the base dir.
@@ -196,7 +184,7 @@ class Analyzer:
             # the fields are about the default constructor:
             constructor=self._doclet_as_function(doclet, full_path),
             members=members,
-            **top_level_properties(doclet, full_path))
+            **root_top_level_properties(doclet, full_path))
 
     def _doclet_as_namespace(self, doclet, full_path):
         # This is an instance method so it can get at the base dir.
@@ -214,7 +202,7 @@ class Analyzer:
             # which are marked as undocumented.
             members=members,
             exported_from=None,
-            **top_level_properties(doclet, full_path))
+            **root_top_level_properties(doclet, full_path))
 
     @staticmethod
     def _doclet_as_function(doclet, full_path):
@@ -228,7 +216,7 @@ class Analyzer:
             exceptions=exceptions_to_ir(doclet.get('exceptions', [])),
             returns=returns_to_ir(doclet.get('returns', [])),
             params=params_to_ir(doclet),
-            **top_level_properties(doclet, full_path))
+            **root_top_level_properties(doclet, full_path))
 
     @staticmethod
     def _doclet_as_attribute(doclet, full_path):
@@ -240,7 +228,7 @@ class Analyzer:
             is_static=False,
             is_private=is_private(doclet),
             type=get_type(doclet),
-            **top_level_properties(doclet, full_path)
+            **root_top_level_properties(doclet, full_path)
         )
 
 
@@ -273,6 +261,15 @@ def full_path_segments(d, base_dir, longname_field='longname'):
     return PathVisitor().visit(
         path_and_formal_params['path'].parse(path))
 
+
+def resolve_path(segments, system_paths):
+    partial_path = ''.join(segments)
+    paths = [path for path in system_paths if partial_path in ''.join(list(path))]
+    if not paths:
+        raise PathError(segments)
+    elif len(paths) > 1:
+        raise MultiPathError(segments, paths)
+    return paths[0]
 
 def folder_path_segments(d, base_dir):
     meta = d['meta']
@@ -362,7 +359,7 @@ def get_type(props):
     return '|'.join(names) if names else None
 
 
-def top_level_properties(doclet, full_path):
+def root_top_level_properties(doclet, full_path):
     """Extract information common to complex entities, and return it as a dict.
 
     Specifically, pull out the information needed to parametrize TopLevel's
@@ -473,3 +470,28 @@ def returns_to_ir(returns):
     return [Return(type=get_type(r),
                    description=description(r))
             for r in returns]
+
+
+class PathError(Exception):
+    def __init__(self, segments):
+        self.partial_path = ''.join(segments)
+        self.message = "No path found"
+
+    def __str__(self):
+        return "{message}: {key}".format(
+            message=self.message,
+            key=self.partial_path
+        )
+
+class MultiPathError(PathError):
+    def __init__(self, segments, paths):
+        self.partial_path = ''.join(segments)
+        self.paths = ', '.join([''.join(path) for path in paths])
+        self.message = "Multiple paths found"
+
+    def __str__(self):
+        return "{message}: {key}: {paths}".format(
+            message=self.message,
+            key=self.partial_path,
+            paths=self.paths
+        )

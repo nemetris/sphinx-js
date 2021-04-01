@@ -1,7 +1,6 @@
 {% import 'common.rst' as common %}
 
-{{ name }}
-================================================================================
+{{ name | escape | underline }}
 
 .. js:module:: {{ name }}
 

@@ -66,12 +66,12 @@ class Analyzer:
         for d in doclets:
             of = d.get('memberof')
             if not of:
-                folder_segments = folder_path_segments(d, base_dir)
+                folder_segments = system_path_segments(d, base_dir)
                 path_segments = full_path_segments(d, base_dir, longname_field='longname')
                 self._doclets_by_module[tuple(path_segments)].append(d)
                 self._doclets_by_location[tuple(folder_segments)].append(d)
             else:
-                folder_segments = folder_path_segments(d, base_dir)
+                folder_segments = system_path_segments(d, base_dir)
                 path_segments = full_path_segments(d, base_dir, longname_field='memberof')
                 self._doclets_by_class[tuple(path_segments)].append(d)
                 self._doclets_by_namespace[tuple(path_segments)].append(d)
@@ -263,6 +263,14 @@ def full_path_segments(d, base_dir, longname_field='longname'):
 
 
 def resolve_path(segments, system_paths):
+    """Return a tuple containing a list of path segments that points to exaclty
+    one location of js modules
+
+    :arg segments: path segments, eq. directive arguments
+    :arg system_paths: collection of system paths that points to js modules
+    """
+    # TODO lazy resolving is not enough. walk down segments as we do in SuffixTree.get_with_path()
+    # to find an exact match-up
     partial_path = ''.join(segments)
     paths = [path for path in system_paths if partial_path in ''.join(list(path))]
     if not paths:
@@ -271,7 +279,12 @@ def resolve_path(segments, system_paths):
         raise MultiPathError(segments, paths)
     return paths[0]
 
-def folder_path_segments(d, base_dir):
+def system_path_segments(d, base_dir):
+    """Return list of path segments that points to a folder with js modules
+
+    :arg d: The Doclet
+    :arg base_dir: Absolutized value of the root_for_relative_js_paths option
+    """
     meta = d['meta']
     rel = relpath(meta['path'], base_dir)
     rel = '/'.join(rel.split(sep))

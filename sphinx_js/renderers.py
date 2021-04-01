@@ -111,8 +111,17 @@ class JsRenderer(object):
         object."""
         dotted_name = partial_path[-1] if use_short_name else dotted_path(partial_path)
 
+        def _underline(title: str, line: str = '=') -> str:
+            if '\n' in title:
+                raise ValueError('Can only underline single lines')
+            return title + '\n' + line * len(title)
+
         # Render to RST using Jinja:
         env = Environment(loader=PackageLoader('sphinx_js', 'templates'))
+        env.filters['escape'] = rst.escape
+        env.filters['e'] = rst.escape
+        env.filters['underline'] = _underline
+
         template = env.get_template(self._template)
         message = "render jinja template {}".format(template)
         logger.debug(prefix + message)

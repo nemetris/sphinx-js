@@ -15,7 +15,8 @@ from tempfile import TemporaryFile
 from sphinx.errors import SphinxError
 
 from .analyzer_utils import cache_to_file, Command, is_explicitly_rooted
-from .ir import Attribute, Class, Exc, Function, Module, Modules, Namespace, NO_DEFAULT, Param, Pathname, Return
+from .ir import (Attribute, Class, Exc, Function, Module,
+                    Namespace, NO_DEFAULT, Param, Pathname, Return)
 from .parsers import path_and_formal_params, PathVisitor
 from .suffix_tree import SuffixTree
 
@@ -108,34 +109,12 @@ class Analyzer:
                 'class': self._doclet_as_class,
                 'namespace': self._doclet_as_namespace,
                 'attribute': self._doclet_as_attribute,
-                'module': self._doclet_as_module,
-                'modules': self._doclets_as_modules}[as_type]
+                'module': self._doclet_as_module}[as_type]
         except KeyError:
             raise NotImplementedError('Unknown autodoc directive: auto%s' % as_type)
 
-        if as_type == 'modules':
-            return doclet_as_whatever(path_suffix)
-        else:
-            doclet, full_path = self._doclets_by_path.get_with_path(path_suffix)
-            return doclet_as_whatever(doclet, full_path)
-
-    def _doclets_as_modules(self, partial_path):
-        members = []
-        path = resolve_path(partial_path, self._doclets_by_location.keys())
-        for member_doclet in self._doclets_by_location[path]:
-            kind = member_doclet.get('kind')
-            member_full_path = full_path_segments(member_doclet, self._base_dir)
-            # Typedefs should still fit into function-shaped holes:
-            if (kind == 'module'):
-                doclet_as_whatever = self._doclet_as_module
-            else:
-                continue # ignore everything else at module level
-            member = doclet_as_whatever(member_doclet, member_full_path)
-            members.append(member)
-        return Modules(
-            members=members,
-            name=Pathname(partial_path).dotted(),
-            path=Pathname(partial_path))
+        doclet, full_path = self._doclets_by_path.get_with_path(path_suffix)
+        return doclet_as_whatever(doclet, full_path)
 
     def _doclet_as_module(self, doclet, full_path):
         members = []
@@ -161,7 +140,7 @@ class Analyzer:
             description=doclet.get('description'),
             members=members,
             exported_from=None,
-            **root_top_level_properties(doclet, full_path))
+            **top_level_properties(doclet, full_path))
 
     def _doclet_as_class(self, doclet, full_path):
         # This is an instance method so it can get at the base dir.
@@ -184,7 +163,7 @@ class Analyzer:
             # the fields are about the default constructor:
             constructor=self._doclet_as_function(doclet, full_path),
             members=members,
-            **root_top_level_properties(doclet, full_path))
+            **top_level_properties(doclet, full_path))
 
     def _doclet_as_namespace(self, doclet, full_path):
         # This is an instance method so it can get at the base dir.
@@ -202,7 +181,7 @@ class Analyzer:
             # which are marked as undocumented.
             members=members,
             exported_from=None,
-            **root_top_level_properties(doclet, full_path))
+            **top_level_properties(doclet, full_path))
 
     @staticmethod
     def _doclet_as_function(doclet, full_path):
@@ -216,7 +195,7 @@ class Analyzer:
             exceptions=exceptions_to_ir(doclet.get('exceptions', [])),
             returns=returns_to_ir(doclet.get('returns', [])),
             params=params_to_ir(doclet),
-            **root_top_level_properties(doclet, full_path))
+            **top_level_properties(doclet, full_path))
 
     @staticmethod
     def _doclet_as_attribute(doclet, full_path):
@@ -228,8 +207,41 @@ class Analyzer:
             is_static=False,
             is_private=is_private(doclet),
             type=get_type(doclet),
-            **root_top_level_properties(doclet, full_path)
+            **top_level_properties(doclet, full_path)
         )
+
+    def resolve_name(self, segments):
+        """Return a tuple containing a list of path segments that points to exaclty
+        one location of js modules
+
+        :arg segments: path segments, eq. directive content
+        """
+        partial_path = ''.join(segments)
+        system_paths = self._doclets_by_location.keys()
+
+        # TODO lazy resolving is not enough. walk down segments as we do in SuffixTree.get_with_path()
+        # to find an exact match-up
+        paths = [path for path in system_paths if partial_path in ''.join(list(path))]
+
+        if not paths:
+            raise PathError(segments)
+        elif len(paths) > 1:
+            raise MultiPathError(segments, paths)
+
+        # collect ir of js modules in path
+        modules = []
+        for module_doclet in self._doclets_by_location[paths[0]]:
+            kind = module_doclet.get('kind')
+            module_full_path = full_path_segments(module_doclet, self._base_dir)
+            # Typedefs should still fit into function-shaped holes:
+            if (kind == 'module'):
+                doclet_as_whatever = self._doclet_as_module
+            else:
+                continue # ignore everything else at module level
+            module = doclet_as_whatever(module_doclet, module_full_path)
+            modules.append(module)
+
+        return modules
 
 
 def is_private(doclet):
@@ -261,23 +273,6 @@ def full_path_segments(d, base_dir, longname_field='longname'):
     return PathVisitor().visit(
         path_and_formal_params['path'].parse(path))
 
-
-def resolve_path(segments, system_paths):
-    """Return a tuple containing a list of path segments that points to exaclty
-    one location of js modules
-
-    :arg segments: path segments, eq. directive arguments
-    :arg system_paths: collection of system paths that points to js modules
-    """
-    # TODO lazy resolving is not enough. walk down segments as we do in SuffixTree.get_with_path()
-    # to find an exact match-up
-    partial_path = ''.join(segments)
-    paths = [path for path in system_paths if partial_path in ''.join(list(path))]
-    if not paths:
-        raise PathError(segments)
-    elif len(paths) > 1:
-        raise MultiPathError(segments, paths)
-    return paths[0]
 
 def system_path_segments(d, base_dir):
     """Return list of path segments that points to a folder with js modules
@@ -372,7 +367,7 @@ def get_type(props):
     return '|'.join(names) if names else None
 
 
-def root_top_level_properties(doclet, full_path):
+def top_level_properties(doclet, full_path):
     """Extract information common to complex entities, and return it as a dict.
 
     Specifically, pull out the information needed to parametrize TopLevel's

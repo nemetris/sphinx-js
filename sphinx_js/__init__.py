@@ -1,6 +1,9 @@
 from os.path import join, normpath
 
 from sphinx.errors import SphinxError
+from sphinx.locale import __
+from sphinx.util import logging
+from sphinx.util.console import bold
 
 from .directives import (auto_class_directive_bound_to_app,
                          auto_namespace_directive_bound_to_app,
@@ -9,9 +12,13 @@ from .directives import (auto_class_directive_bound_to_app,
                          auto_module_directive_bound_to_app,
                          auto_modules_directive_bound_to_app,
                          JSCustomConstructor)
+from .generator import process_automodules
 from .jsdoc import Analyzer as JsAnalyzer
+from .nodes import automodules_noop, automodulestoctree, automodules_toc_visit_html
 from .typedoc import Analyzer as TsAnalyzer
 
+logger = logging.getLogger(__name__)
+prefix = bold(__('Sphinx-js [Setup]: '))
 
 def setup(app):
     # I believe this is the best place to run jsdoc. I was tempted to use
@@ -42,6 +49,12 @@ def setup(app):
     app.add_directive_to_domain('js',
                                 'automodules',
                                 auto_modules_directive_bound_to_app(app))
+    app.add_node(automodulestoctree,
+                 html=(automodules_toc_visit_html, automodules_noop),
+                 latex=(automodules_noop, automodules_noop),
+                 text=(automodules_noop, automodules_noop),
+                 man=(automodules_noop, automodules_noop),
+                 texinfo=(automodules_noop, automodules_noop))
 
     app.add_config_value('js_language', 'javascript', 'env')
     app.add_config_value('js_source_path', '../', 'env')
@@ -77,6 +90,9 @@ def analyze(app):
     app._sphinxjs_analyzer = analyzer.from_disk(abs_source_paths,
                                                 app,
                                                 root_for_relative_paths)
+
+    # Generate automodules stub files
+    process_automodules(app)
 
 
 def root_or_fallback(root_for_relative_paths, abs_source_paths):

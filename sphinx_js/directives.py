@@ -8,7 +8,7 @@ can access each other and collaborate.
 
 """
 from docutils.parsers.rst import Directive
-from docutils.parsers.rst.directives import flag
+from docutils.parsers.rst.directives import flag, unchanged
 
 from sphinx.domains.javascript import JSCallable
 from sphinx.locale import __
@@ -140,20 +140,27 @@ def auto_module_directive_bound_to_app(app):
 
 def auto_modules_directive_bound_to_app(app):
     class AutoModulesDirective(JsDirective):
-        """js:automodules directive, which spits out js:module directives for
-        each collected module under the give path.
-
-        Takes a single argument which is the top-level path to JS modules.
-
+        """js:automodules directive, which spits out a toctree to reference
+        the generated stub .rst files.
         """
-        option_spec = JsDirective.option_spec.copy()
-        option_spec.update({
+        required_arguments = 0
+        optional_arguments = 0
+        final_argument_whitespace = False
+        has_content = True
+        option_spec = {
+            'toctree': unchanged,
+            # 'nosignatures': flag,
+            # 'recursive': flag,
+            'template': unchanged,
             'members': lambda members: ([m.strip() for m in members.split(',')]
                                         if members else []),
             'exclude-members': _members_to_exclude,
-            'private-members': flag})
+            'private-members': flag
+        }
+
         def run(self):
-            return AutoModulesRenderer.from_directive(self, app).rst_nodes()
+            return AutoModulesRenderer.from_directive(self, app).render_toc()
+
 
     return AutoModulesDirective
 

@@ -1,9 +1,11 @@
+import posixpath
 from re import sub
 
 from docutils.parsers.rst import Parser as RstParser
 from docutils.statemachine import StringList
 from docutils.utils import new_document
 from jinja2 import Environment, PackageLoader
+from sphinx import addnodes
 from sphinx.errors import SphinxError
 from sphinx.locale import __
 from sphinx.util import logging, rst
@@ -11,6 +13,7 @@ from sphinx.util.console import bold
 
 from .analyzer_utils import dotted_path
 from .ir import Class, Function, Interface, Module, Namespace, Pathname
+from .nodes import automodulestoctree
 from .parsers import PathVisitor
 from .suffix_tree import SuffixAmbiguous, SuffixNotFound
 
@@ -29,27 +32,20 @@ class JsRenderer(object):
 
     """
     def __init__(self, directive, app, arguments=None, content=None, options=None):
-        # Fix crash when calling eval_rst with CommonMarkParser:
-        if not hasattr(directive.state.document.settings, 'tab_width'):
-            directive.state.document.settings.tab_width = 8
-
-        self._directive = directive
-
         # content, arguments, options, app: all need to be accessible to
         # template_vars, so we bring them in on construction and stow them away
         # on the instance so calls to template_vars don't need to concern
         # themselves with what it needs.
         self._app = app
         self._env = app.env
-        self._partial_path, self._explicit_formal_params = PathVisitor().parse(arguments[0])
         self._content = content or StringList()
         self._options = options or {}
 
-        # Prefix partial path if we use automodule directive.
-        # Only add prefix if we must not deal with long pathnames like ./some/dir/file..
-        if len(self._partial_path) == 1 and 'automodule' in directive.name:
-            prefix = 'module'
-            self._partial_path[0] = '{}:{}'.format(prefix, self._partial_path[0])
+        self._directive = directive
+        if directive and directive.required_arguments:
+            self._partial_path, self._explicit_formal_params = PathVisitor().parse(arguments[0])
+        else:
+            self._partial_path, self._explicit_formal_params = [''], ''
 
     @classmethod
     def from_directive(cls, directive, app):
@@ -63,11 +59,24 @@ class JsRenderer(object):
         :arg app: The Sphinx global app object. Some methods need this.
 
         """
-        return cls(directive,
+        renderer = cls(directive,
                    app,
                    arguments=directive.arguments,
                    content=directive.content,
                    options=directive.options)
+
+        # Fix crash when calling eval_rst with CommonMarkParser:
+        if not hasattr(directive.state.document.settings, 'tab_width'):
+            directive.state.document.settings.tab_width = 8
+
+        # Prefix partial path if we use automodule directive.
+        # Only add prefix if we must not deal with long pathnames like ./some/dir/file..
+        if len(renderer._partial_path) == 1 and 'automodule' in directive.name:
+            prefix = 'module'
+            renderer._partial_path[0] = '{}:{}'.format(prefix, renderer._partial_path[0])
+
+        return renderer
+
 
     def rst_nodes(self):
         """Render into RST nodes a thing shaped like a function, having a name
@@ -119,7 +128,6 @@ class JsRenderer(object):
         # Render to RST using Jinja:
         env = Environment(loader=PackageLoader('sphinx_js', 'templates'))
         env.filters['escape'] = rst.escape
-        env.filters['e'] = rst.escape
         env.filters['underline'] = _underline
 
         template = env.get_template(self._template)
@@ -444,7 +452,7 @@ class AutoModuleRenderer(JsRenderer):
 
 
 class AutoModulesRenderer(JsRenderer):
-    _template = 'modules.rst'
+    _template = 'module-base.rst'
     _renderer_type = 'modules'
 
     def __init__(self, directive, app, arguments=None, content=None, options=None):
@@ -453,41 +461,44 @@ class AutoModulesRenderer(JsRenderer):
 
     def _template_vars(self, name, obj):
         return dict(
-            members=self._members_of(obj,
-                                     include=self._options['members'],
-                                     exclude=self._options.get('exclude-members', set()))
-                        if 'members' in self._options else '',
-        )
+            name=name,
+            members=obj.members,
+            exclude_members=obj.exclude_members,
+            private_members=obj.private_members)
 
-    def _members_of(self, obj, include, exclude):
-        """Return RST describing the members of a given module.
+    def render_toc(self):
+        """Render toctree"""
+        # get generated stub files
+        # example: ( "path/to/stubfile.rst", "path/to/", "stubfile", ".rst")
+        docs = self._app.generated_automodules_docs
 
-        :arg obj Module: The module we're documenting
-        :arg include: List of names of members to include. If empty, include
-            all.
-        :arg exclude: Set of names of members to exclude
-        """
-        # TODO refactor this
-        def rst_for(obj):
-            if isinstance(obj, Module):
-                renderer = AutoModuleRenderer
-            elif isinstance(obj, Namespace):
-                renderer = AutoNamespaceRenderer
-            elif isinstance(obj, Class):
-                renderer = AutoClassRenderer
-            else:
-                renderer = AutoFunctionRenderer
-            return renderer(self._directive,
-                            self._app,
-                            arguments=['dummy'],
-                            options=self._options).rst(
-                [obj.name],
-                obj,
-                use_short_name=False)
+        dirname = posixpath.dirname(self._env.docname)
+        tree_prefix = self._options['toctree'].strip()
+        docnames = []
+        # excluded = Matcher(self.config.exclude_patterns)
+        for path, dirpath, name, suffix in docs:
+            docname = posixpath.join(tree_prefix, name)
+            docname = posixpath.normpath(posixpath.join(dirname, docname))
+            if docname not in self._env.found_docs:
+                # if excluded(self.env.doc2path(docname, None)):
+                #     msg = __('automodule references excluded document %r. Ignored.')
+                # else:
+                msg = __('automodule: stub file not found %r.' )
 
-        return '\n\n'.join(
-            rst_for(member) for member in _members_to_include(obj, include)
-            if member.name not in exclude)
+                logger.warning(prefix, msg, name, location=self._directive.get_source_info())
+                continue
+
+            docnames.append(docname)
+
+        if docnames:
+            # generate toctree
+            tocnode = addnodes.toctree()
+            tocnode['includefiles'] = docnames
+            tocnode['entries'] = [(None, docn) for docn in docnames]
+            tocnode['maxdepth'] = -1
+            tocnode['glob'] = None
+
+        return [automodulestoctree('','', tocnode)]
 
 
 def unwrapped(text):

@@ -1,3 +1,0 @@
-{% if members -%}
-    {{ members }}
-{%- endif %}

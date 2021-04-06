@@ -1,7 +1,5 @@
 {% import 'common.rst' as common %}
 
-{{ name | escape | underline }}
-
 .. js:module:: {{ name }}
 
 {% if description -%}

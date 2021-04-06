@@ -132,7 +132,19 @@ class Return:
 
 
 @dataclass
-class Root:
+class TopLevel:
+    """A language object with an independent existence
+
+    A TopLevel entity is a potentially strong entity in the database sense; one
+    of these can exist on its own and not merely as a datum attached to another
+    entity. For example, Returns do not qualify, since they cannot exist
+    without a parent Function. And, though a given Attribute may be attached to
+    a Class, Attributes can also exist top-level in a module.
+
+    These are also complex entities: the sorts of thing with the potential to
+    include the kinds of subentities referenced by the fields defined herein.
+
+    """
     #: The short name of the object, regardless of whether it's a class or
     #: function or typedef or param.
     #:
@@ -147,22 +159,6 @@ class Root:
     #: 'dir/', 'dir/', 'file/', 'object.', 'object#', 'object']`` or
     #: a system path that points js module(s)
     path: Pathname
-
-
-@dataclass
-class TopLevel:
-    """A language object with an independent existence
-
-    A TopLevel entity is a potentially strong entity in the database sense; one
-    of these can exist on its own and not merely as a datum attached to another
-    entity. For example, Returns do not qualify, since they cannot exist
-    without a parent Function. And, though a given Attribute may be attached to
-    a Class, Attributes can also exist top-level in a module.
-
-    These are also complex entities: the sorts of thing with the potential to
-    include the kinds of subentities referenced by the fields defined herein.
-
-    """
     #: The basename of the file the object is from, e.g. "foo.js"
     filename: str
     #: The human-readable description of the entity or '' if absent
@@ -184,7 +180,7 @@ class TopLevel:
 
 
 @dataclass
-class Attribute(Root, TopLevel, _Member):
+class Attribute(TopLevel, _Member):
     """A property of an object
 
     These are called attributes to match up with Sphinx's autoattribute
@@ -196,7 +192,7 @@ class Attribute(Root, TopLevel, _Member):
 
 
 @dataclass
-class Function(Root, TopLevel, _Member):
+class Function(TopLevel, _Member):
     """A function or a method of a class"""
     params: List[Param]
     exceptions: List[Exc]  # noqa: Linter is buggy.
@@ -217,12 +213,12 @@ class _MembersAndSupers:
 
 
 @dataclass
-class Interface(Root, TopLevel, _MembersAndSupers):
+class Interface(TopLevel, _MembersAndSupers):
     """An interface, a la TypeScript"""
 
 
 @dataclass
-class Class(Root, TopLevel, _MembersAndSupers):
+class Class(TopLevel, _MembersAndSupers):
     #: The default constructor for this class. Absent if the constructor is
     #: inherited.
     constructor: Optional[Function]
@@ -236,7 +232,7 @@ class Class(Root, TopLevel, _MembersAndSupers):
     # have the space to include them someday.
 
 @dataclass
-class Namespace(Root, TopLevel):
+class Namespace(TopLevel):
     #: Namespace members, concretized ahead of time for simplicity. (Otherwise,
     #: we'd have to pass the doclets_by_namespace map in and keep it around, along
     #: with a callable that would create the member IRs from it on demand.)
@@ -247,13 +243,9 @@ class Namespace(Root, TopLevel):
     # have the space to include them someday.
 
 @dataclass
-class Module(Root, TopLevel):
+class Module(TopLevel):
     authors: List[str]
     version: str
     license_information: str
     # functions: Optional[List[Function]]
     members: Optional[List[Union[Class, Function, Namespace]]]
-
-@dataclass
-class Modules(Root):
-    members: List[Module]

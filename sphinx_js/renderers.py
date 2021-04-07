@@ -472,6 +472,18 @@ class AutoModulesRenderer(JsRenderer):
         # example: ( "path/to/stubfile.rst", "path/to/", "stubfile", ".rst")
         docs = self._app.generated_automodules_docs
 
+        # get modules which needs to be documented
+        content = self._content
+        excluded = self._options.get('exclude-members', '')
+        analyzer = self._app._sphinxjs_analyzer
+
+        modules = []
+        for module_spec in content:
+            modules += [module.name for module in analyzer.resolve_name(module_spec)]
+
+        # filter generated stub files
+        docs = [doc for doc in docs if doc[2] in modules and doc[2] not in excluded]
+
         dirname = posixpath.dirname(self._env.docname)
         tree_prefix = self._options['toctree'].strip()
         docnames = []
@@ -480,12 +492,8 @@ class AutoModulesRenderer(JsRenderer):
             docname = posixpath.join(tree_prefix, name)
             docname = posixpath.normpath(posixpath.join(dirname, docname))
             if docname not in self._env.found_docs:
-                # if excluded(self.env.doc2path(docname, None)):
-                #     msg = __('automodule references excluded document %r. Ignored.')
-                # else:
-                msg = __('automodule: stub file not found %r.' )
-
-                logger.warning(prefix, msg, name, location=self._directive.get_source_info())
+                msg = __('automodule: stub file not found %s.' % name )
+                logger.warning(prefix, msg)
                 continue
 
             docnames.append(docname)
@@ -494,7 +502,7 @@ class AutoModulesRenderer(JsRenderer):
             # generate toctree
             tocnode = addnodes.toctree()
             tocnode['includefiles'] = docnames
-            tocnode['entries'] = [(None, docn) for docn in docnames]
+            tocnode['entries'] = [(None, docn) for docn in sorted(docnames)]
             tocnode['maxdepth'] = -1
             tocnode['glob'] = None
 

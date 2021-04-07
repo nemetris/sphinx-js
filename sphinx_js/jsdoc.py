@@ -26,15 +26,18 @@ class Analyzer:
     the results to our IR
 
     """
-    def __init__(self, json, base_dir):
+    def __init__(self, app, json, base_dir):
         """Index and squirrel away the JSON for later lazy conversion to IR
         objects.
 
+        :arg app: Sphinx application
         :arg json: The loaded JSON output from jsdoc
         :arg base_dir: Resolve paths in the JSON relative to this directory.
             This must be an absolute pathname.
 
         """
+        self._app = app
+        self._app.module_members = defaultdict(lambda: [])
         self._base_dir = base_dir
         # 2 doclets are made for classes, and they are largely redundant: one
         # for the class itself and another for the constructor. However, the
@@ -86,7 +89,7 @@ class Analyzer:
                             base_dir,
                             app.confdir,
                             getattr(app.config, 'jsdoc_config_path', None))
-        return cls(json, base_dir)
+        return cls(app, json, base_dir)
 
     def get_object(self, path_suffix, as_type):
         """Return the IR object with the given path suffix.
@@ -152,6 +155,8 @@ class Analyzer:
             doclet_as_whatever = self._doclet_as_function if (kind == 'function' or kind == 'typedef') else self._doclet_as_attribute
             member = doclet_as_whatever(member_doclet, member_full_path)
             members.append(member)
+
+        self._save_references(doclet)
         return Class(
             description=doclet.get('classdesc', ''),
             supers=[],  # Could implement for JS later.
@@ -175,6 +180,8 @@ class Analyzer:
             doclet_as_whatever = self._doclet_as_function if (kind == 'function' or kind == 'typedef') else self._doclet_as_attribute
             member = doclet_as_whatever(member_doclet, member_full_path)
             members.append(member)
+
+        self._save_references(doclet)
         return Namespace(
             description=doclet.get('description', ''),
             # Right now, a namespace generates several doclets, all but one of
@@ -242,6 +249,19 @@ class Analyzer:
             modules.append(module)
 
         return modules
+
+    def _save_references(self, doclet):
+        """Save references for future use"""
+        member = doclet['name']
+        module = doclet['memberof'].split(":")[-1]
+
+        # prefix reference if module and member have the same name
+        if member in module:
+            ref_name = "{name}.{name}".format(name=doclet['name'])
+        else:
+            ref_name = doclet['name']
+        if ref_name not in self._app.module_members[module]:
+            self._app.module_members[module].append(ref_name)
 
 
 def is_private(doclet):

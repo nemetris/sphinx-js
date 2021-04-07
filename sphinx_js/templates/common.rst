@@ -20,7 +20,7 @@
 {% endmacro %}
 
 {% macro see_also(items) %}
-{% if items -%}
+{% if items.internal or items.external -%}
 .. seealso::
 
    {% for reference in items.internal -%}

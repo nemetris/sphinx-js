@@ -141,7 +141,6 @@ def find_automodules_in_lines(lines: List[str], module: str = None, filename: st
     documented = []  # type: List[AutomodulesEntry]
 
     toctree = None  # type: str
-    template = None
     members = None
     exclude_members = None
     private_members = False
@@ -156,11 +155,6 @@ def find_automodules_in_lines(lines: List[str], module: str = None, filename: st
                 if filename:
                     toctree = os.path.join(os.path.dirname(filename),
                                            toctree)
-                continue
-
-            m = template_arg_re.match(line)
-            if m:
-                template = m.group(1).strip()
                 continue
 
             m = members_arg_re.match(line)

@@ -197,7 +197,7 @@ class Analyzer:
             exported_from=None,
             is_abstract=False,
             is_optional=False,
-            is_static=False,
+            is_static=is_static(doclet),
             is_private=is_private(doclet),
             exceptions=exceptions_to_ir(doclet.get('exceptions', [])),
             returns=returns_to_ir(doclet.get('returns', [])),
@@ -377,6 +377,9 @@ def format_default_according_to_type_hints(value, declared_types, first_type_is_
 
 def description(obj):
     return obj.get('description', '')
+
+def is_static(obj):
+    return obj.get('scope', '') == 'static'
 
 
 def get_type(props):

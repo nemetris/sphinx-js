@@ -234,8 +234,9 @@ class AutoFunctionRenderer(JsRenderer):
             examples=obj.examples,
             deprecated=obj.deprecated,
             is_optional=obj.is_optional,
+            is_static=obj.is_static,
             see_also=self._prepare_see_alsos(obj.see_alsos),
-            content='\n'.join(self._content))
+            content='\n'.join(self._content),)
 
 
 class AutoClassRenderer(JsRenderer):
@@ -381,6 +382,10 @@ class AutoNamespaceRenderer(JsRenderer):
 
         """
         def rst_for(obj):
+            # modify is_static prop
+            # jsdoc expects each member of a namespace to be static.
+            # we fix this here 'cause here we now that we are inside a namespace
+            obj.is_static = False
             renderer = (AutoFunctionRenderer if isinstance(obj, Function)
                         else AutoAttributeRenderer)
             return renderer(self._directive, self._app, arguments=['dummy']).rst(

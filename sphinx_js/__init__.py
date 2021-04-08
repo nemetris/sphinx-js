@@ -11,7 +11,8 @@ from .directives import (auto_class_directive_bound_to_app,
                          auto_attribute_directive_bound_to_app,
                          auto_module_directive_bound_to_app,
                          auto_modules_directive_bound_to_app,
-                         JSCustomConstructor)
+                         JSCustomConstructor,
+                         JSStaticFunction)
 from .generator import process_automodules
 from .jsdoc import Analyzer as JsAnalyzer
 from .nodes import automodules_noop, automodulestoctree, automodules_toc_visit_html
@@ -28,6 +29,9 @@ def setup(app):
 
     app.connect('env-before-read-docs', read_all_docs)
 
+    app.add_directive_to_domain('js',
+                                'staticfunction',
+                                JSStaticFunction)
     app.add_directive_to_domain('js',
                                 'autofunction',
                                 auto_function_directive_bound_to_app(app))

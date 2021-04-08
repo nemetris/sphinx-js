@@ -79,6 +79,10 @@ def generate_automodules_docs(sources: List[str],
 
         # iterate through all js modules
         for module in modules:
+            # skip generation of stub file
+            if module.name in entry.exclude_members:
+                continue
+
             # render template
             content = template.rst([module.name], entry, use_short_name=True)
 
@@ -136,13 +140,12 @@ def find_automodules_in_lines(lines: List[str], module: str = None, filename: st
     members_arg_re = re.compile(r'^\s+:members:\s*(.*?)\s*$')
     exclude_members_arg_re = re.compile(r'^\s+:exclude-members:\s*(.*?)\s*$')
     private_members_arg_re = re.compile(r'^\s+:private-members:\s*(.*?)\s*$')
-    template_arg_re = re.compile(r'^\s+:template:\s*(.*?)\s*$')
 
     documented = []  # type: List[AutomodulesEntry]
 
     toctree = None  # type: str
     members = None
-    exclude_members = None
+    exclude_members = ""
     private_members = False
     in_automodules = False
     base_indent = ""
@@ -191,9 +194,8 @@ def find_automodules_in_lines(lines: List[str], module: str = None, filename: st
             in_automodules = True
             base_indent = m.group(1)
             toctree = "_automodules"
-            template = None
             members = None
-            exclude_members = None
+            exclude_members = ""
             private_members = None
             continue
 

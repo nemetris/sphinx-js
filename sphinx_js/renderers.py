@@ -207,11 +207,11 @@ class JsRenderer(object):
 
         for name in options:
             if name in config_default_options:
-                if name in options_active and isinstance(config_default_options[name], str):
-                    # take value from options if present and extend it
+                if name in options_active:
+                    # take value from options if present and not None and extend it
                     # with js_autodoc_default_options if necessary
-                    if name in extendable_options and options_active[name] is not None:
-                        if options_active[name] is not None:
+                    if isinstance(config_default_options[name], str) and isinstance(options_active[name], list):
+                        if name in extendable_options:
                             options_active[name] += [val.strip() for val in config_default_options[name].split(',')]
                 else:
                     # typ check default option

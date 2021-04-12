@@ -2,6 +2,8 @@
 
 .. js:module:: {{ name }}
 
+{{ common.deprecated(deprecated) }}
+
 {% if description -%}
     {{ description }}
 {%- endif %}

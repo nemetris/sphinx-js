@@ -200,12 +200,26 @@ class JsRenderer(object):
 
 
     def _default_options(self):
-        default_options = self._app.config['js_autodoc_default_options']
-        for option, value in default_options.items():
-            if isinstance(value, bool):
-                self._options.setdefault(option, '')
-            else:
-                self._options[option] = value
+        options = ['members', 'private-members']
+        extendable_options = ['members']
+        options_active = self._options
+        config_default_options = self._app.config['js_autodoc_default_options']
+
+        for name in options:
+            if name in config_default_options:
+                if name in options_active and isinstance(config_default_options[name], str):
+                    # take value from options if present and extend it
+                    # with js_autodoc_default_options if necessary
+                    if name in extendable_options and options_active[name] is not None:
+                        if options_active[name] is not None:
+                            options_active[name] += [val.strip() for val in config_default_options[name].split(',')]
+                else:
+                    # typ check default option
+                    # set to default if option is True or None else ignore option
+                    val = config_default_options[name]
+                    if val in [True, None]:
+                        options_active[name] = None
+
 
     def _prepare_see_alsos(self, see_alsos):
         map_see_alsos = {"internal": [], "external": []}
@@ -480,9 +494,10 @@ class AutoModulesRenderer(JsRenderer):
     def _template_vars(self, name, obj):
         return dict(
             name=name,
+            members_option=True if obj.members is not None else False,
             members=obj.members,
             exclude_members=obj.exclude_members,
-            private_members=obj.private_members)
+            is_private=True if obj.private_members is not None else False)
 
     def render_toc(self):
         """Render toctree"""

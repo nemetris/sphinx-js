@@ -46,7 +46,7 @@ class JsDirective(Directive):
             name=name,
             arguments=' '.join(arguments)
         )
-        logger.info(prefix + message)
+        logger.debug(prefix + message)
 
 
 def auto_function_directive_bound_to_app(app):
@@ -75,7 +75,7 @@ def auto_class_directive_bound_to_app(app):
         option_spec = JsDirective.option_spec.copy()
         option_spec.update({
             'members': lambda members: ([m.strip() for m in members.split(',')]
-                                        if members else []),
+                                        if members else None),
             'exclude-members': _members_to_exclude,
             'private-members': flag})
 
@@ -96,7 +96,7 @@ def auto_namespace_directive_bound_to_app(app):
         option_spec = JsDirective.option_spec.copy()
         option_spec.update({
             'members': lambda members: ([m.strip() for m in members.split(',')]
-                                        if members else []),
+                                        if members else None),
             'exclude-members': _members_to_exclude,
             'private-members': flag})
 
@@ -129,7 +129,7 @@ def auto_module_directive_bound_to_app(app):
         option_spec = JsDirective.option_spec.copy()
         option_spec.update({
             'members': lambda members: ([m.strip() for m in members.split(',')]
-                                        if members else []),
+                                        if members else None),
             'exclude-members': _members_to_exclude,
             'private-members': flag})
         def run(self):
@@ -147,13 +147,14 @@ def auto_modules_directive_bound_to_app(app):
         optional_arguments = 0
         final_argument_whitespace = False
         has_content = True
+        option_spec = JsDirective.option_spec.copy()
         option_spec = {
             'toctree': unchanged,
             # 'nosignatures': flag,
             # 'recursive': flag,
             'template': unchanged,
             'members': lambda members: ([m.strip() for m in members.split(',')]
-                                        if members else []),
+                                        if members else None),
             'exclude-members': _members_to_exclude,
             'private-members': flag
         }

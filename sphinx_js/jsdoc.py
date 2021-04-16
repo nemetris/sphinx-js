@@ -155,8 +155,6 @@ class Analyzer:
             doclet_as_whatever = self._doclet_as_function if (kind == 'function' or kind == 'typedef') else self._doclet_as_attribute
             member = doclet_as_whatever(member_doclet, member_full_path)
             members.append(member)
-
-        self._save_references(doclet)
         return Class(
             description=doclet.get('classdesc', ''),
             supers=[],  # Could implement for JS later.
@@ -180,8 +178,6 @@ class Analyzer:
             doclet_as_whatever = self._doclet_as_function if (kind == 'function' or kind == 'typedef') else self._doclet_as_attribute
             member = doclet_as_whatever(member_doclet, member_full_path)
             members.append(member)
-
-        self._save_references(doclet)
         return Namespace(
             description=doclet.get('description', ''),
             # Right now, a namespace generates several doclets, all but one of
@@ -249,19 +245,6 @@ class Analyzer:
             modules.append(module)
 
         return modules
-
-    def _save_references(self, doclet):
-        """Save references for future use"""
-        member = doclet['name']
-        module = doclet['memberof'].split(":")[-1]
-
-        # prefix reference if module and member have the same name
-        if member in module:
-            ref_name = "{name}.{name}".format(name=doclet['name'])
-        else:
-            ref_name = doclet['name']
-        if ref_name not in self._app.module_members[module]:
-            self._app.module_members[module].append(ref_name)
 
 
 def is_private(doclet):

@@ -135,7 +135,7 @@ def find_automodules_in_lines(lines: List[str], module: str = None, filename: st
     *toctree* ``None`` if the directive does not have the corresponding options set.
     """
     automodules_re = re.compile(r'^(\s*)\.\.\s+js:automodules::\s*')
-    automodules_item_re = re.compile(r'^\s+(~?[_a-zA-Z][a-zA-Z0-9_.]*)\s*.*?')
+    automodules_item_re = re.compile(r'^\s+(~?[_a-zA-Z][a-zA-Z0-9_./]*)\s*.*?')
     toctree_arg_re = re.compile(r'^\s+:toctree:\s*(.*?)\s*$')
     members_arg_re = re.compile(r'^\s+:members:\s*(.*?)\s*$')
     exclude_members_arg_re = re.compile(r'^\s+:exclude-members:\s*(.*?)\s*$')

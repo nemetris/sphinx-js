@@ -281,11 +281,14 @@ def system_path_segments(d, base_dir):
     :arg d: The Doclet
     :arg base_dir: Absolutized value of the root_for_relative_js_paths option
     """
+    ignore_paths = [".", ".."]
     meta = d['meta']
     rel = relpath(meta['path'], base_dir)
     rel = '/'.join(rel.split(sep))
     rooted_rel = rel if is_explicitly_rooted(rel) else './%s' % rel
     path = rooted_rel
+    if path in ignore_paths:
+        return path
     return PathVisitor().visit(
         path_and_formal_params['path'].parse(path))
 

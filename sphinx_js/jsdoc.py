@@ -26,7 +26,7 @@ class Analyzer:
     the results to our IR
 
     """
-    def __init__(self, app, json, base_dir):
+    def __init__(self, json, base_dir):
         """Index and squirrel away the JSON for later lazy conversion to IR
         objects.
 
@@ -36,8 +36,6 @@ class Analyzer:
             This must be an absolute pathname.
 
         """
-        self._app = app
-        self._app.module_members = defaultdict(lambda: [])
         self._base_dir = base_dir
         # 2 doclets are made for classes, and they are largely redundant: one
         # for the class itself and another for the constructor. However, the
@@ -89,7 +87,7 @@ class Analyzer:
                             base_dir,
                             app.confdir,
                             getattr(app.config, 'jsdoc_config_path', None))
-        return cls(app, json, base_dir)
+        return cls(json, base_dir)
 
     def get_object(self, path_suffix, as_type):
         """Return the IR object with the given path suffix.

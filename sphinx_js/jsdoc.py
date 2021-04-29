@@ -130,7 +130,7 @@ class Analyzer:
             elif (kind == 'function'):
                 doclet_as_whatever = self._doclet_as_function
             else:
-                continue # ignore everything else at module level
+                continue    # ignore everything else at module level
             member = doclet_as_whatever(member_doclet, member_full_path)
             members.append(member)
         return Module(
@@ -238,7 +238,7 @@ class Analyzer:
             if (kind == 'module'):
                 doclet_as_whatever = self._doclet_as_module
             else:
-                continue # ignore everything else at module level
+                continue    # ignore everything else at module level
             module = doclet_as_whatever(module_doclet, module_full_path)
             modules.append(module)
 
@@ -281,7 +281,7 @@ def system_path_segments(d, base_dir):
     :arg d: The Doclet
     :arg base_dir: Absolutized value of the root_for_relative_js_paths option
     """
-    ignore_paths = [".", ".."]
+    ignore_paths = ['.', '..']
     meta = d['meta']
     rel = relpath(meta['path'], base_dir)
     rel = '/'.join(rel.split(sep))
@@ -490,10 +490,10 @@ def returns_to_ir(returns):
 class PathError(Exception):
     def __init__(self, segments):
         self.partial_path = ''.join(segments)
-        self.message = "No path found"
+        self.message = 'No path found'
 
     def __str__(self):
-        return "{message}: {key}".format(
+        return '{message}: {key}'.format(
             message=self.message,
             key=self.partial_path
         )
@@ -502,10 +502,10 @@ class MultiPathError(PathError):
     def __init__(self, segments, paths):
         self.partial_path = ''.join(segments)
         self.paths = ', '.join([''.join(path) for path in paths])
-        self.message = "Multiple paths found"
+        self.message = 'Multiple paths found'
 
     def __str__(self):
-        return "{message}: {key}: {paths}".format(
+        return '{message}: {key}: {paths}'.format(
             message=self.message,
             key=self.partial_path,
             paths=self.paths

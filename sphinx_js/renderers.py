@@ -12,7 +12,7 @@ from sphinx.util import logging, rst
 from sphinx.util.console import bold
 
 from .analyzer_utils import dotted_path
-from .ir import Class, Function, Interface, Module, Namespace, Pathname
+from .ir import Class, Function, Interface, Namespace, Pathname
 from .nodes import automodulestoctree
 from .parsers import PathVisitor
 from .suffix_tree import SuffixAmbiguous, SuffixNotFound
@@ -60,10 +60,10 @@ class JsRenderer(object):
 
         """
         renderer = cls(directive,
-                   app,
-                   arguments=directive.arguments,
-                   content=directive.content,
-                   options=directive.options)
+                        app,
+                        arguments=directive.arguments,
+                        content=directive.content,
+                        options=directive.options)
 
         # Fix crash when calling eval_rst with CommonMarkParser:
         if not hasattr(directive.state.document.settings, 'tab_width'):
@@ -76,7 +76,6 @@ class JsRenderer(object):
             renderer._partial_path[0] = '{}:{}'.format(prefix, renderer._partial_path[0])
 
         return renderer
-
 
     def rst_nodes(self):
         """Render into RST nodes a thing shaped like a function, having a name
@@ -110,7 +109,6 @@ class JsRenderer(object):
             doc = new_document('%s:%s::%s(%s)' % (doc_name, directive_name, obj.name, line),
                                settings=self._directive.state.document.settings)
 
-            logger.info(prefix + "parse RST")
             RstParser().parse(rst, doc)
             return doc.children
         return []
@@ -131,7 +129,7 @@ class JsRenderer(object):
         env.filters['underline'] = _underline
 
         template = env.get_template(self._template)
-        message = "render jinja template {}".format(template)
+        message = 'render jinja template {}'.format(template)
         logger.debug(prefix + message)
         return template.render(**self._template_vars(dotted_name, obj))
 
@@ -198,13 +196,11 @@ class JsRenderer(object):
                     # restructuredtext.html#field-lists.
                     yield [rst.escape(h) for h in heads], unwrapped(tail)
 
-
     def _default_options(self):
         options = ['members', 'private-members']
         extendable_options = ['members']
         options_active = self._options
         config_default_options = self._app.config['js_autodoc_default_options']
-
         for name in options:
             if name in config_default_options:
                 if name in options_active:
@@ -220,21 +216,20 @@ class JsRenderer(object):
                     if val in [True, None]:
                         options_active[name] = None
 
-
     def _prepare_see_alsos(self, see_alsos):
-        map_see_alsos = {"internal": [], "external": []}
+        map_see_alsos = {'internal': [], 'external': []}
         for ref in see_alsos:
             # skip empty @see
             if ref is None:
                 continue
             # prepare links like {@link http://...}
-            # split on @link tag, slice to drop the curly brackets,
+            # split at @link tag, slice to drop the curly brackets and
             # strip to remove whitespaces
-            if "@link" in ref:
-                reference = ''.join(ref.split("@link"))[1:-1].strip()
-                map_see_alsos["external"].append(reference)
+            if '@link' in ref:
+                reference = ''.join(ref.split('@link'))[1:-1].strip()
+                map_see_alsos['external'].append(reference)
             else:
-                map_see_alsos["internal"].append(ref)
+                map_see_alsos['internal'].append(ref)
         return map_see_alsos
 
 
@@ -455,8 +450,7 @@ class AutoModuleRenderer(JsRenderer):
             members=self._members_of(obj,
                                      include=self._options['members'],
                                      exclude=self._options.get('exclude-members', set()))
-                        if 'members' in self._options else '',
-        )
+                    if 'members' in self._options else '')
 
     def _members_of(self, obj, include, exclude):
         """Return RST describing the members of a given module.
@@ -528,7 +522,7 @@ class AutoModulesRenderer(JsRenderer):
             docname = posixpath.join(tree_prefix, name)
             docname = posixpath.normpath(posixpath.join(dirname, docname))
             if docname not in self._env.found_docs:
-                msg = __('automodule: stub file not found %s.' % name )
+                msg = __('automodule: stub file not found %s.' % name)
                 logger.warning(prefix, msg)
                 continue
 
@@ -542,7 +536,7 @@ class AutoModulesRenderer(JsRenderer):
             tocnode['maxdepth'] = -1
             tocnode['glob'] = None
 
-        return [automodulestoctree('','', tocnode)]
+        return [automodulestoctree('', '', tocnode)]
 
 
 def unwrapped(text):

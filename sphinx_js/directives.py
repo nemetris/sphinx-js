@@ -9,7 +9,6 @@ can access each other and collaborate.
 """
 from docutils.parsers.rst import Directive
 from docutils.parsers.rst.directives import flag, unchanged
-
 from sphinx.domains.javascript import JSCallable
 from sphinx.locale import __
 from sphinx.util import logging
@@ -41,11 +40,10 @@ class JsDirective(Directive):
     def __init__(self, name, arguments, options, content, lineno,
                  content_offset, block_text, state, state_machine):
         super().__init__(name, arguments, options, content, lineno,
-                 content_offset, block_text, state, state_machine)
-        message = "found {name}:: {arguments}".format(
+                            content_offset, block_text, state, state_machine)
+        message = 'found {name}:: {arguments}'.format(
             name=name,
-            arguments=' '.join(arguments)
-        )
+            arguments=' '.join(arguments))
         logger.debug(prefix + message)
 
 
@@ -132,6 +130,7 @@ def auto_module_directive_bound_to_app(app):
                                         if members else None),
             'exclude-members': _members_to_exclude,
             'private-members': flag})
+
         def run(self):
             return AutoModuleRenderer.from_directive(self, app).rst_nodes()
 
@@ -161,7 +160,6 @@ def auto_modules_directive_bound_to_app(app):
 
         def run(self):
             return AutoModulesRenderer.from_directive(self, app).render_toc()
-
 
     return AutoModulesDirective
 

@@ -1,13 +1,12 @@
 import os
 import re
+from typing import List, NamedTuple, Tuple
 
 from sphinx.application import Sphinx
 from sphinx.locale import __
 from sphinx.util import logging
 from sphinx.util.console import bold
 from sphinx.util.osutil import ensuredir
-
-from typing import Any, Callable, Dict, List, NamedTuple, Set, Tuple, Union
 
 from .renderers import AutoModulesRenderer
 
@@ -41,7 +40,7 @@ def process_automodules(app: Sphinx) -> None:
         suffix=suffix,
         base_path=app.srcdir,
         app=app,
-        overwrite=True, # always true
+        overwrite=True,
         encoding=app.config.source_encoding)
 
 
@@ -93,9 +92,8 @@ def generate_automodules_docs(sources: List[str],
 
                 if content == old_content:
                     app.generated_automodules_docs.append((filename, path, module.name, suffix))
-                    logger.info(prefix +
-                        'automodule stub file {}{} is already up-to-date'.format(
-                        module.name, suffix))
+                    logger.info(prefix + 'automodule stub file {}{} is already up-to-date'.format(
+                                module.name, suffix))
                     continue
                 elif overwrite:  # content has changed
                     with open(filename, 'w', encoding=encoding) as f:
@@ -108,9 +106,7 @@ def generate_automodules_docs(sources: List[str],
                 module.name, suffix))
 
 
-
 # -- Finding documented entries in files ---------------------------------------
-
 def find_automodules_in_files(filenames: List[str]) -> List[AutomodulesEntry]:
     """Find out what items are documented in source/*.rst.
 
@@ -145,10 +141,10 @@ def find_automodules_in_lines(lines: List[str], module: str = None, filename: st
 
     toctree = None  # type: str
     members = None
-    exclude_members = ""
+    exclude_members = ''
     private_members = False
     in_automodules = False
-    base_indent = ""
+    base_indent = ''
 
     for line in lines:
         if in_automodules:
@@ -181,10 +177,10 @@ def find_automodules_in_lines(lines: List[str], module: str = None, filename: st
             m = automodules_item_re.match(line)
             if m:
                 name = m.group(1).strip()
-                documented.append(AutomodulesEntry(name, toctree, members, exclude_members, private_members ))
+                documented.append(AutomodulesEntry(name, toctree, members, exclude_members, private_members))
                 continue
 
-            if not line.strip() or line.startswith(base_indent + " "):
+            if not line.strip() or line.startswith(base_indent + ' '):
                 continue
 
             in_automodules = False
@@ -193,9 +189,9 @@ def find_automodules_in_lines(lines: List[str], module: str = None, filename: st
         if m:
             in_automodules = True
             base_indent = m.group(1)
-            toctree = "_automodules"
+            toctree = '_automodules'
             members = None
-            exclude_members = ""
+            exclude_members = ''
             private_members = None
             continue
 

@@ -248,7 +248,7 @@ class AutoFunctionRenderer(JsRenderer):
             is_optional=obj.is_optional,
             is_static=obj.is_static,
             see_also=self._prepare_see_alsos(obj.see_alsos),
-            content='\n'.join(self._content),)
+            content='\n'.join(self._content))
 
 
 class AutoClassRenderer(JsRenderer):

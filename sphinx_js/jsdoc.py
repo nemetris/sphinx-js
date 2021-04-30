@@ -249,6 +249,10 @@ def is_private(doclet):
     return doclet.get('access') == 'private'
 
 
+def is_static(obj):
+    return obj.get('scope', '') == 'static'
+
+
 def full_path_segments(d, base_dir, longname_field='longname'):
     """Return the full, unambiguous list of path segments that points to an
     entity described by a doclet.

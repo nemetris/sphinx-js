@@ -213,7 +213,7 @@ class JsRenderer(object):
                     # typ check default option
                     # set to default if option is True or None else ignore option
                     val = config_default_options[name]
-                    if val in [True, None]:
+                    if val in [True, None, '1']:
                         options_active[name] = None
 
     def _prepare_see_alsos(self, see_alsos):

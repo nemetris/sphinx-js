@@ -223,11 +223,16 @@ class JsRenderer(object):
             if ref is None:
                 continue
             # prepare links like {@link http://...}
-            # split at @link tag, slice to drop the curly brackets and
+            # split on tag, slice to drop the curly brackets,
             # strip to remove whitespaces
-            if '@link' in ref:
-                reference = ''.join(ref.split('@link'))[1:-1].strip()
-                map_see_alsos['external'].append(reference)
+            link_synonmys = ['@linkplain', '@linkcode', '@link']
+            if link_synonmys[-1] in ref:
+                for synonym in link_synonmys:
+                    if synonym not in ref:
+                        continue
+                    reference = ''.join(ref.split(synonym))[1:-1].strip()
+                    map_see_alsos['external'].append(reference)
+                    break
             else:
                 map_see_alsos['internal'].append(ref)
         return map_see_alsos

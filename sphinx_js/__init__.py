@@ -54,6 +54,7 @@ def setup(app):
 
     app.add_directive_to_domain('js',
                                 'autoattribute',
+                                auto_attribute_directive_bound_to_app(app))
     app.add_directive_to_domain('js',
                                 'automodule',
                                 auto_module_directive_bound_to_app(app))

@@ -231,21 +231,18 @@ class Class(TopLevel, _MembersAndSupers):
     # `undocumented: True` doclet and so are presently filtered out. But we do
     # have the space to include them someday.
 
+
 @dataclass
 class Namespace(TopLevel):
     #: Namespace members, concretized ahead of time for simplicity. (Otherwise,
     #: we'd have to pass the doclets_by_namespace map in and keep it around, along
     #: with a callable that would create the member IRs from it on demand.)
     members: List[Union[Function, Attribute]]
-    # There's room here for additional fields like @example on the class doclet
-    # itself. These are supported and extracted by jsdoc, but they end up in an
-    # `undocumented: True` doclet and so are presently filtered out. But we do
-    # have the space to include them someday.
+
 
 @dataclass
 class Module(TopLevel):
     authors: List[str]
     version: str
     license_information: str
-    # functions: Optional[List[Function]]
     members: Optional[List[Union[Class, Function, Namespace]]]

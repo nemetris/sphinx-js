@@ -178,8 +178,6 @@ class Analyzer:
             members.append(member)
         return Namespace(
             description=doclet.get('description', ''),
-            # Right now, a namespace generates several doclets, all but one of
-            # which are marked as undocumented.
             members=members,
             exported_from=None,
             **top_level_properties(doclet, full_path))

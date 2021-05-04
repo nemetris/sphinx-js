@@ -8,14 +8,6 @@
      {{ namespace_comment|indent(3) }}
    {%- endif %}
 
-   {% if is_abstract -%}
-     *abstract*
-   {%- endif %}
-
-   {% if is_interface -%}
-     *interface*
-   {%- endif %}
-
    {{ common.exported_from(exported_from)|indent(3) }}
 
    {% for heads, tail in fields -%}

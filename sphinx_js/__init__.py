@@ -1,7 +1,9 @@
 from os.path import join, normpath
 
+from sphinx.domains.javascript import JSXRefRole, JavaScriptDomain
+from sphinx.domains import ObjType
 from sphinx.errors import SphinxError
-from sphinx.locale import __
+from sphinx.locale import _, __
 from sphinx.util import logging
 from sphinx.util.console import bold
 
@@ -44,9 +46,14 @@ def setup(app):
     app.add_directive_to_domain('js',
                                 'namespace',
                                 JSCustomConstructor)
+    # NOTE: I couldn't find a recommended/denoted way to add a new object type
+    # to a specific domain. When using the app.add_object_type() method it is not
+    # possible to reference namespace objects 'cause sphinx adds the object to
+    # the 'std' domain a not the 'js' domain.
+    JavaScriptDomain.object_types.setdefault('namespace', ObjType(_('namespace'),  'ns'))
+
     app.add_directive_to_domain('js',
                                 'autoattribute',
-                                auto_attribute_directive_bound_to_app(app))
     app.add_directive_to_domain('js',
                                 'automodule',
                                 auto_module_directive_bound_to_app(app))

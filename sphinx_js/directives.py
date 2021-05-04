@@ -104,6 +104,28 @@ def auto_namespace_directive_bound_to_app(app):
     return AutoNamespaceDirective
 
 
+def auto_namespace_directive_bound_to_app(app):
+    class AutoNamespaceDirective(JsDirective):
+        """js:autonamespace directive, which spits out a js:namespace directive
+
+        Takes a single argument which is a JS class name combined with an
+        optional formal parameter list for the constructor, all mashed together
+        in a single string.
+
+        """
+        option_spec = JsDirective.option_spec.copy()
+        option_spec.update({
+            'members': lambda members: ([m.strip() for m in members.split(',')]
+                                        if members else []),
+            'exclude-members': _members_to_exclude,
+            'private-members': flag})
+
+        def run(self):
+            return AutoNamespaceRenderer.from_directive(self, app).rst_nodes()
+
+    return AutoNamespaceDirective
+
+
 def auto_attribute_directive_bound_to_app(app):
     class AutoAttributeDirective(JsDirective):
         """js:autoattribute directive, which spits out a js:attribute directive

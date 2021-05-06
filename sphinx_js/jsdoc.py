@@ -69,16 +69,17 @@ class Analyzer:
             of = d.get('memberof')
             if not of:
                 folder_segments = system_path_segments(d, base_dir)
-                path_segments = full_path_segments(d, base_dir, longname_field='longname')
-                self._doclets_by_module[tuple(path_segments)].append(d)
                 self._doclets_by_location[tuple(folder_segments)].append(d)
             else:
-                folder_segments = system_path_segments(d, base_dir)
-                path_segments = full_path_segments(d, base_dir, longname_field='memberof')
-                self._doclets_by_class[tuple(path_segments)].append(d)
-                self._doclets_by_namespace[tuple(path_segments)].append(d)
-                self._doclets_by_module[tuple(path_segments)].append(d)
-                self._doclets_by_location[tuple(folder_segments)].append(d)
+                if 'module' in of:
+                    folder_segments = system_path_segments(d, base_dir)
+                    path_segments = full_path_segments(d, base_dir, longname_field='memberof')
+                    self._doclets_by_module[tuple(path_segments)].append(d)
+                    self._doclets_by_location[tuple(folder_segments)].append(d)
+                else:
+                    path_segments = full_path_segments(d, base_dir, longname_field='memberof')
+                    self._doclets_by_class[tuple(path_segments)].append(d)
+                    self._doclets_by_namespace[tuple(path_segments)].append(d)
 
     @classmethod
     def from_disk(cls, abs_source_paths, app, base_dir):

@@ -619,6 +619,29 @@ class TestAllDefaultValues(SphinxBuildDefaultsAllTestCase):
             '\n'
             '      More.\n')
 
+    def test_autonamespace(self):
+        """Make sure a namespace lists all of its members if default options ``members``
+        equals true.
+        """
+        self._file_contents_eq(
+            'autonamespace',
+            'namespace ContainingNamespace()\n'
+            '\n'
+            '   Namespace doc.\n'
+            '\n'
+            '   ContainingNamespace.someVar\n'
+            '\n'
+            '      A var.\n'
+            '\n'
+            '   static ContainingNamespace.anotherMethod()\n'
+            '\n'
+            '      Another.\n'
+            '\n'
+            '   static ContainingNamespace.yetAnotherMethod()\n'
+            '\n'
+            '      More.\n')
+
+
 class TestMembersDefaultValue(SphinxBuildDefaultsMembersTestCase):
     """Test some feature with default options specified.
     """
@@ -640,6 +663,28 @@ class TestMembersDefaultValue(SphinxBuildDefaultsMembersTestCase):
             '      Public thing.\n'
             '\n'
             '   ClosedClass.publical2()\n'
+            '\n'
+            '      Public thing 2.\n')
+
+    def test_autonamespace_some_members_list(self):
+        """Make sure namespace ClosedNamespace lists all of its members
+        due to default value.
+        """
+        self._file_contents_eq(
+            'autonamespace_members_list',
+            'namespace ClosedNamespace()\n'
+            '\n'
+            '   Closed namespace.\n'
+            '\n'
+            '   static ClosedNamespace.publical3()\n'
+            '\n'
+            '      Public thing 3.\n'
+            '\n'
+            '   static ClosedNamespace.publical()\n'
+            '\n'
+            '      Public thing.\n'
+            '\n'
+            '   static ClosedNamespace.publical2()\n'
             '\n'
             '      Public thing 2.\n')
 

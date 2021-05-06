@@ -77,6 +77,7 @@ class Analyzer:
                     self._doclets_by_location[tuple(folder_segments)].append(d)
                 else:
                     path_segments = full_path_segments(d, base_dir, longname_field='memberof')
+                    self._doclets_by_module[tuple(path_segments)].append(d)
                     self._doclets_by_class[tuple(path_segments)].append(d)
                     self._doclets_by_namespace[tuple(path_segments)].append(d)
 
@@ -362,9 +363,6 @@ def format_default_according_to_type_hints(value, declared_types, first_type_is_
 
 def description(obj):
     return obj.get('description', '')
-
-def is_static(obj):
-    return obj.get('scope', '') == 'static'
 
 
 def get_type(props):

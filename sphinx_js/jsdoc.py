@@ -16,7 +16,7 @@ from sphinx.errors import SphinxError
 
 from .analyzer_utils import cache_to_file, Command, is_explicitly_rooted
 from .ir import (Attribute, Class, Exc, Function, Module,
-                    Namespace, NO_DEFAULT, Param, Pathname, Return)
+                 Namespace, NO_DEFAULT, Param, Pathname, Return)
 from .parsers import path_and_formal_params, PathVisitor
 from .suffix_tree import SuffixTree
 
@@ -137,7 +137,6 @@ class Analyzer:
             authors=doclet.get('author'),   # can be a list of authors
             version=doclet.get('version'),
             license_information=doclet.get('license'),
-            # date=doclet.get('tags', []).get('value'), FIXME print date information
             description=doclet.get('description'),
             members=members,
             exported_from=None,

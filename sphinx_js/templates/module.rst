@@ -9,9 +9,9 @@
 {%- endif %}
 
 {% if authors -%}
-    **Author(s):**  {% for a in authors -%}
-                        {% if loop.last -%}{{ a }}{% else %}{{ a }}, {% endif %}
-                    {%- endfor %}
+    **Author(s):** {% for a in authors -%}
+                       {% if loop.last -%}{{ a }}{% else %}{{ a }}, {% endif %}
+                   {%- endfor %}
 {%- endif %}
 
 {% if version -%}
@@ -23,5 +23,5 @@
 {%- endif %}
 
 {% if members -%}
-    {{ members|indent(3) }}
+    {{ members }}
 {%- endif %}

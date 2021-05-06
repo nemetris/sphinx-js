@@ -351,7 +351,7 @@ class AutoNamespaceRenderer(JsRenderer):
             name=name,
             examples=obj.examples,
             deprecated=obj.deprecated,
-            see_also=obj.see_alsos,
+            see_also=self._prepare_see_alsos(obj.see_alsos),
             exported_from=obj.exported_from,
             namespace_comment=obj.description,
             content='\n'.join(self._content),

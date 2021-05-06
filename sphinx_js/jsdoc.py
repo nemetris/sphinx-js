@@ -71,13 +71,12 @@ class Analyzer:
             if not of:
                 self._doclets_by_location[tuple(folder_segments)].append(d)
             else:
-                if 'module' in of:
+                if 'module' in of and '~' not in of:
                     path_segments = full_path_segments(d, base_dir, longname_field='memberof')
                     self._doclets_by_module[tuple(path_segments)].append(d)
                     self._doclets_by_location[tuple(folder_segments)].append(d)
                 else:
                     path_segments = full_path_segments(d, base_dir, longname_field='memberof')
-                    self._doclets_by_module[tuple(path_segments)].append(d)
                     self._doclets_by_class[tuple(path_segments)].append(d)
                     self._doclets_by_namespace[tuple(path_segments)].append(d)
 

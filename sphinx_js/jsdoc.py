@@ -67,12 +67,11 @@ class Analyzer:
         self._doclets_by_location = defaultdict(lambda: [])
         for d in doclets:
             of = d.get('memberof')
+            folder_segments = system_path_segments(d, base_dir)
             if not of:
-                folder_segments = system_path_segments(d, base_dir)
                 self._doclets_by_location[tuple(folder_segments)].append(d)
             else:
                 if 'module' in of:
-                    folder_segments = system_path_segments(d, base_dir)
                     path_segments = full_path_segments(d, base_dir, longname_field='memberof')
                     self._doclets_by_module[tuple(path_segments)].append(d)
                     self._doclets_by_location[tuple(folder_segments)].append(d)

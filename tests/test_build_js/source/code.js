@@ -262,7 +262,7 @@ class SimpleClass {
     static noUseOfThis() {}
 }
 
-/*
+/**
  * Namespace doc.
  * @namespace
  */
@@ -286,7 +286,10 @@ var ContainingNamespace = {
 }
 
 // We won't add any new members to this namespace, because it would break some tests.
-/** Closed namespace. */
+/**
+ * Closed namespace.
+ * @namespace
+ */
 var ClosedNamespace = {
     /**
      * Public thing.

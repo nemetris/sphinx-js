@@ -377,7 +377,7 @@ class Tests(SphinxBuildTestCase):
             '     Deprecated.\n\n'
             'namespace DeprecatedExplanatoryNamespace()\n\n'
             '   Note:\n\n'
-            '     Deprecated: don\'t use anymore\n')
+            "     Deprecated: don't use anymore\n")
 
     def test_autonamespace_see(self):
         """Make sure @see tags work with autonamespace."""
@@ -395,13 +395,13 @@ class Tests(SphinxBuildTestCase):
         """
         self._file_contents_eq(
             'autonamespace_no_paramnames',
-            'Make sure we don\'t have KeyErrors on naked, memberless objects labeled'
+            "Make sure we don't have KeyErrors on naked, memberless objects labeled"
             '\n'
             'as namespace:\n'
             '\n'
             'namespace NoParamnamesNamespace()\n'
             '\n'
-            '   This doesn\'t emit a paramnames key in meta.code.\n')
+            "   This doesn't emit a paramnames key in meta.code.\n")
 
     def test_autoattribute(self):
         """Make sure ``autoattribute`` works."""

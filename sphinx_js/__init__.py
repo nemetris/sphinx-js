@@ -13,7 +13,7 @@ from .directives import (auto_class_directive_bound_to_app,
                          auto_attribute_directive_bound_to_app,
                          auto_module_directive_bound_to_app,
                          auto_modules_directive_bound_to_app,
-                         JSCustomConstructor,
+                         JSNamespace,
                          JSStaticFunction)
 from .generator import process_automodules
 from .jsdoc import Analyzer as JsAnalyzer
@@ -45,12 +45,14 @@ def setup(app):
                                 auto_namespace_directive_bound_to_app(app))
     app.add_directive_to_domain('js',
                                 'namespace',
-                                JSCustomConstructor)
+                                JSNamespace)
+    app.add_role_to_domain('js', 'ns', JSXRefRole(fix_parens=True))
+
     # NOTE: I couldn't find a recommended/denoted way to add a new object type
     # to a specific domain. When using the app.add_object_type() method it is not
     # possible to reference namespace objects 'cause sphinx adds the object to
     # the 'std' domain a not the 'js' domain.
-    JavaScriptDomain.object_types.setdefault('namespace', ObjType(_('namespace'),  'ns'))
+    JavaScriptDomain.object_types.setdefault('namespace', ObjType(_('namespace'), 'ns'))
 
     app.add_directive_to_domain('js',
                                 'autoattribute',

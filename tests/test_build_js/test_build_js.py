@@ -474,8 +474,8 @@ class Tests(SphinxBuildTestCase):
             '\n'
             '**License:** MIT\n'
             '\n'
-            'class TestModule.SimpleClass()\n\n'
-            '   SimpleClass.\n'
+            'class TestModule.StandardClass()\n\n'
+            '   StandardClass.\n'
             '\n'
             'TestModule.simpleFunction()\n\n'
             '   simpleFunction.\n')

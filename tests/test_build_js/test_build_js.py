@@ -509,6 +509,10 @@ class Tests(SphinxBuildTestCase):
             '\n'
             '      zMember.\n'
             '\n'
+            'TestModule.globalConstant\n'
+            '\n'
+            '   globalConstant.\n'
+            '\n'
             'TestModule.simpleFunction()\n\n'
             '   simpleFunction.\n')
 
@@ -568,6 +572,10 @@ class Tests(SphinxBuildTestCase):
             '\n'
             '      zMember.\n'
             '\n'
+            'TestModule.globalConstant\n'
+            '\n'
+            '   globalConstant.\n'
+            '\n'
             'TestModule.simpleFunction()\n'
             '\n'
             '   simpleFunction.\n')
@@ -593,6 +601,10 @@ class Tests(SphinxBuildTestCase):
             '   StandardClass.aMember()\n'
             '\n'
             '      aMember.\n'
+            '\n'
+            'TestModule.globalConstant\n'
+            '\n'
+            '   globalConstant.\n'
             '\n'
             'TestModule.simpleFunction()\n'
             '\n'

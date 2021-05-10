@@ -439,8 +439,10 @@ class AutoModuleRenderer(JsRenderer):
                 renderer = AutoNamespaceRenderer
             elif isinstance(obj, Class):
                 renderer = AutoClassRenderer
-            else:
+            elif isinstance(obj, Function):
                 renderer = AutoFunctionRenderer
+            else:
+                renderer = AutoAttributeRenderer
             return renderer(self._directive,
                             self._app,
                             arguments=['dummy'],

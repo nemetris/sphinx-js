@@ -1,4 +1,3 @@
-/* eslint-disable */
 /**
  * For test purpose only.
  *
@@ -40,6 +39,6 @@ class StandardClass {
 function simpleFunction() {}
 
 /**
- * someAttribute.
+ * globalConstant.
  */
-const someAttribute = null;
+const globalConstant = null;

@@ -53,6 +53,7 @@ def setup(app):
     # possible to reference namespace objects 'cause sphinx adds the object to
     # the 'std' domain a not the 'js' domain.
     JavaScriptDomain.object_types.setdefault('namespace', ObjType(_('namespace'), 'ns'))
+    JavaScriptDomain.object_types.setdefault('staticfunction', ObjType(_('static function'), 'func'))
 
     app.add_directive_to_domain('js',
                                 'autoattribute',
@@ -69,12 +70,6 @@ def setup(app):
                  text=(automodules_noop, automodules_noop),
                  man=(automodules_noop, automodules_noop),
                  texinfo=(automodules_noop, automodules_noop))
-
-    # NOTE: I couldn't find a recommended/denoted way to add a new object type
-    # to a specific domain. When using the app.add_object_type() method it is not
-    # possible to reference namespace objects 'cause sphinx adds the object to
-    # the 'std' domain a not the 'js' domain.
-    JavaScriptDomain.object_types.setdefault('staticfunction', ObjType(_('static function'), 'func'))
 
     app.add_config_value('js_language', 'javascript', 'env')
     app.add_config_value('js_source_path', '../', 'env')

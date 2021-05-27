@@ -8,6 +8,7 @@ def test_default():
     default value."""
     p = Param(name='fred',
               has_default=True,
+              is_optional=True,
               default='boof')
     assert p.default == 'boof'
 
@@ -17,4 +18,5 @@ def test_missing_default():
     value should raise an error."""
     with pytest.raises(ValueError):
         Param(name='fred',
-              has_default=True)
+              has_default=True,
+              is_optional=True)

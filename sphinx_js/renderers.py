@@ -545,8 +545,11 @@ def _param_type_formatter(param):
     if not param.type:
         return None
     heads = ['type', param.name]
-    tail = rst.escape(param.type)
-    return heads, tail
+    tail = []
+    tail.append(rst.escape(param.type))
+    if param.is_optional:
+        tail.append(param.optional)
+    return heads, ', '.join(tail)
 
 
 def _exception_formatter(exception):

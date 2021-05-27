@@ -16,7 +16,7 @@ from sphinx.errors import SphinxError
 
 from .analyzer_utils import cache_to_file, Command, is_explicitly_rooted
 from .ir import (Attribute, Class, Exc, Function, Module,
-                 Namespace, NO_DEFAULT, Param, Pathname, Return)
+                 Namespace, NO_DEFAULT, OPTIONAL, Param, Pathname, Return)
 from .parsers import path_and_formal_params, PathVisitor
 from .suffix_tree import SuffixTree
 
@@ -456,12 +456,16 @@ def params_to_ir(doclet):
                 default,
                 type,
                 first_type_is_string(p.get('type', {}))))
+        is_optional = p.get('optional', False)
+
         ret.append(Param(
             name=p['name'],
             description=description(p),
             has_default=default is not NO_DEFAULT,
             default=formatted_default,
             is_variadic=p.get('variable', False),
+            is_optional=is_optional,
+            optional='dummy' if not is_optional else OPTIONAL,
             type=get_type(p)))
 
     # Use params from JS code if there are no documented @params.

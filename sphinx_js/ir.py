@@ -73,6 +73,7 @@ class _NoDefault:
         return '<no default value>'
 NO_DEFAULT = _NoDefault()
 
+OPTIONAL = 'optional'
 
 @dataclass
 class _Member:
@@ -102,6 +103,8 @@ class Param:
     description: ReStructuredText = ''
     has_default: bool = False
     is_variadic: bool = False
+    is_optional: bool = False
+    optional: str = ''
     type: Type = None
     #: Return the default value of this parameter, string-formatted so it can
     #: be immediately suffixed to an equal sign in a formal param list. For
@@ -113,6 +116,9 @@ class Param:
         if self.has_default and default is NO_DEFAULT:
             raise ValueError('Tried to construct a Param with has_default=True but without `default` specified.')
         self.default = default
+
+        if self.has_default and not self.is_optional:
+            raise ValueError('Tried to construct a Param with has_default=True but without `is_optional` specified.')
 
 
 @dataclass
